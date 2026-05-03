@@ -1,0 +1,8 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
+}
+
+tasks.register('assembleDebug', com.android.build.gradle.tasks.BuildConfigTask) {
+    // Stub for compatibility
+}
