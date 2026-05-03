@@ -1,31 +1,46 @@
 @echo off
-echo Building BOLTFM Android App...
+chcp 65001 >nul
+color 0a
+title BOLTFM Build
+echo.
+echo ========================================
+echo       BOLTFM Android Builder
+echo ========================================
+echo.
 
-REM Check for local.properties
+REM Check for Java
+java -version >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Java not found!
+    echo Install Java 17 first: https://adoptium.net/
+    pause
+    exit
+)
+
+REM Check for SDK
 if not exist "local.properties" (
-    echo Creating local.properties...
-    (
-        echo sdk.dir=C:\Android\Sdk
-    ) > local.properties
+    echo Setting SDK path...
+    echo sdk.dir=C:\platformtools > local.properties
 )
 
-REM Copy index.html to assets
-if exist "index.html" (
-    echo Copying index.html to assets...
-    if not exist "app\src\main\assets" mkdir "app\src\main\assets"
-    copy /Y index.html app\src\main\assets\
-)
+REM Create assets folder
+if not exist "app\src\main\assets" mkdir "app\src\main\assets"
 
-REM Build APK
+REM Copy HTML
+echo Copying index.html...
+copy /Y index.html app\src\main\assets\ >nul
+
+REM Build
 echo Building APK...
-gradlew.bat assembleDebug
+call gradlew.bat assembleDebug --no-daemon
 
+echo.
+echo ========================================
 if exist "app\build\outputs\apk\debug\app-debug.apk" (
-    echo.
-    echo SUCCESS! APK at: app\build\outputs\apk\debug\app-debug.apk
+    echo SUCCESS!
+    echo APK: app\build\outputs\apk\debug\app-debug.apk
 ) else (
-    echo.
-    echo Build failed. Check errors above.
+    echo FAILED - Check errors above
 )
-
+echo ========================================
 pause
