@@ -124,18 +124,41 @@
 <body class="bg-gray-950 text-white">
 
 <div class="h-screen w-full flex flex-col">
-    <!-- TOP BAR -->
-    <div class="bg-gray-900/90 border-b border-gray-800 px-5 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-bolt text-black text-lg"></i>
+    <!-- TOP BAR with Custom Branding -->
+    <div class="bg-gray-900/95 border-b border-gray-800 px-5 py-3 flex items-center justify-between backdrop-blur-md">
+        <div class="flex items-center gap-4">
+            <!-- Custom Logo -->
+            <div class="w-12 h-12 relative">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <defs>
+                        <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00ff41"/>
+                            <stop offset="100%" style="stop-color:#00f0ff"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="45" fill="url(#boltGrad)" opacity="0.2"/>
+                    <circle cx="50" cy="50" r="35" fill="url(#boltGrad)" opacity="0.4"/>
+                    <text x="50" y="65" text-anchor="middle" font-size="50" fill="url(#boltGrad)" font-weight="900">⚡</text>
+                </svg>
+                <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full animate-pulse"></div>
             </div>
             <div>
-                <h1 class="text-2xl font-black tracking-tight">BoltFN <span class="text-emerald-400">AURORA PRO</span></h1>
-                <p class="text-[10px] text-gray-400 -mt-0.5">REAL CHECKER • Microsoft + Epic Games • Full DLC Capture</p>
+                <h1 class="text-2xl font-black tracking-tight flex items-center gap-2">
+                    <span class="text-white">Bolt</span><span class="text-emerald-400">FN</span>
+                    <span class="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded">PRO</span>
+                </h1>
+                <p class="text-[10px] text-gray-400">Microsoft + Epic Games • Full DLC Capture</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
+            <!-- System Info Mini (Top Right) -->
+            <div class="flex items-center gap-2 bg-gray-950 rounded-lg px-3 py-1.5 text-xs">
+                <span class="text-gray-400"><i class="fa-solid fa-microchip"></i></span>
+                <span class="text-emerald-400 font-mono" id="cpuMini">0%</span>
+                <span class="text-gray-600">|</span>
+                <span class="text-gray-400"><i class="fa-solid fa-memory"></i></span>
+                <span class="text-blue-400 font-mono" id="ramMini">0%</span>
+            </div>
             <div class="bg-gray-800 rounded-full px-4 py-2 flex items-center gap-2">
                 <span class="pulse-dot w-2 h-2 bg-emerald-400 rounded-full"></span>
                 <span class="text-xs font-medium" id="statusText">Ready</span>
