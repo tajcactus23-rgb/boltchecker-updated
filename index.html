@@ -3,1096 +3,864 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoltFM v2.0 | OG Xbox Modding</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>BoltFN • Aurora Pro • REAL CHECKER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root {
-            --bg-dark: #0a0e14;
-            --bg-panel: #111820;
-            --neon-blue: #00f0ff;
-            --neon-cyan: #00ffd5;
-            --pcb-green: #00ff41;
-            --warning: #ff6b00;
-            --error: #ff0040;
-            --text: #e0e8f0;
-            --text-dim: #6a7a8a;
-        }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            min-height: 100vh;
+        body { font-family: 'Inter', sans-serif; transition: background 0.2s, color 0.2s; }
+        .log-area { font-family: 'JetBrains Mono', monospace; line-height: 1.4; font-size: 11px; }
+        .progress-bar { transition: width 0.2s ease; }
+        .hit-card {
+            transition: all 0.25s ease;
+            border-left: 4px solid #00ff9d;
+            background: linear-gradient(135deg, rgba(0,255,157,0.08) 0%, rgba(0,100,255,0.03) 100%);
+            animation: slideIn 0.3s ease-out;
         }
-        
-        .circuit-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent 98%, rgba(0,240,255,0.03) 98%),
-                        linear-gradient(0deg, transparent 98%, rgba(0,240,255,0.03) 98%);
-            background-size: 50px 50px;
-            animation: circuitMove 20s linear infinite;
-            z-index: 0;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes circuitMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 50px 50px; }
-        }
-        
-        .app-container {
-            position: relative;
-            z-index: 1;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        header {
-            background: linear-gradient(180deg, rgba(17,24,32,0.95) 0%, rgba(17,24,32,0.8) 100%);
-            border-bottom: 1px solid rgba(0,240,255,0.3);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-cyan) 50%, var(--pcb-green) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: glow 2s ease-in-out infinite;
-        }
-        
-        @keyframes glow {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(0,240,255,0.5)); }
-            50% { filter: drop-shadow(0 0 20px rgba(0,240,255,0.8)); }
-        }
-        
-        .header-status {
-            display: flex;
-            gap: 20px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
-        }
-        
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 12px;
-            background: rgba(0,240,255,0.1);
-            border: 1px solid rgba(0,240,255,0.2);
-            border-radius: 4px;
-        }
-        
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--pcb-green);
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
+        .hit-card:hover { transform: translateX(4px) scale(1.01); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #00ff9d; border-radius: 10px; }
+        button { transition: all 0.15s; cursor: pointer; }
+        button:active { transform: scale(0.97); }
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+            50% { opacity: 0.5; }
+        }
+        .region-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+        .region-AU { background: #00bfff20; border: 1px solid #00bfff; color: #00bfff; }
+        .region-US { background: #ff444420; border: 1px solid #ff4444; color: #ff8888; }
+        .region-GB { background: #ffa50020; border: 1px solid #ffa500; color: #ffa500; }
+        .region-CA { background: #ff69b420; border: 1px solid #ff69b4; color: #ff69b4; }
+        .region-DE { background: #ffeb3b20; border: 1px solid #ffeb3b; color: #ffeb3b; }
+        .region-FR { background: #9c27b020; border: 1px solid #9c27b0; color: #ce93d8; }
+        .region-BR { background: #4caf5020; border: 1px solid #4caf50; color: #81c784; }
+        .region-JP { background: #ff174420; border: 1px solid #ff1744; color: #ff5252; }
+        .region-RU { background: #00e67620; border: 1px solid #00e676; color: #69f0ae; }
+        .region-UNKNOWN { background: #607d8b20; border: 1px solid #607d8b; color: #90a4ae; }
+        
+        /* System Widget Animations */
+        @keyframes cpuPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 255, 157, 0); }
+        }
+        @keyframes ramGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        @keyframes netFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
         }
         
-        .login-panel {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: calc(100vh - 80px);
-            padding: 20px;
+        .sys-widget {
+            transition: all 0.3s ease;
         }
-        
-        .login-box {
-            width: 450px;
-            background: rgba(17,24,32,0.9);
-            border: 1px solid rgba(0,240,255,0.3);
-            border-radius: 8px;
-            padding: 40px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .login-box::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 4px;
-            background: linear-gradient(90deg, var(--neon-blue), var(--pcb-green), var(--neon-cyan));
-            animation: scanline 2s linear infinite;
-        }
-        
-        @keyframes scanline {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(100px); }
-        }
-        
-        .login-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 30px;
-            color: var(--neon-blue);
-        }
-        
-        .input-group { margin-bottom: 20px; }
-        
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-dim);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(0,240,255,0.3);
-            border-radius: 4px;
-            color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
-        }
-        
-        .input-group input:focus {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0,240,255,0.2);
-        }
-        
-        .hwid-display {
-            background: #000;
-            padding: 15px;
-            border: 1px solid rgba(0,240,255,0.3);
-            border-radius: 4px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 10px;
-            color: var(--pcb-green);
-            word-break: break-all;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-login {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-cyan) 100%);
-            border: none;
-            border-radius: 4px;
-            color: var(--bg-dark);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-        
-        .btn-login::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        .btn-login:hover {
+        .sys-widget:hover {
             transform: scale(1.02);
-            box-shadow: 0 0 30px rgba(0,240,255,0.5);
+        }
+        .cpu-bar {
+            animation: cpuPulse 2s ease-in-out infinite;
+        }
+        .ram-indicator {
+            animation: ramGlow 3s ease-in-out infinite;
+        }
+        .net-bar {
+            background: linear-gradient(90deg, #00ff9d, #00bfff, #00ff9d);
+            background-size: 200% 100%;
+            animation: netFlow 2s linear infinite;
         }
         
-        .btn-row {
+        /* AI Assistant */
+        .ai-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        .ai-thinking {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .btn-start, .btn-stop {
-            flex: 1;
-            padding: 18px;
-            border: none;
-            border-radius: 4px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-start {
-            background: linear-gradient(135deg, var(--pcb-green) 0%, var(--neon-cyan) 100%);
-            color: var(--bg-dark);
-        }
-        
-        .btn-start:hover {
-            box-shadow: 0 0 25px rgba(0,255,65,0.5);
-        }
-        
-        .btn-stop {
-            background: linear-gradient(135deg, var(--error) 0%, var(--warning) 100%);
-            color: white;
-        }
-        
-        .btn-stop:hover {
-            box-shadow: 0 0 25px rgba(255,0,64,0.5);
-        }
-        
-        .beta-badge {
-            position: absolute;
-            top: 15px; right: -30px;
-            background: var(--warning);
-            color: #000;
-            padding: 5px 40px;
-            font-size: 10px;
-            font-weight: 700;
-            transform: rotate(45deg);
-        }
-        
-        .dashboard { display: none; padding: 20px; }
-        .dashboard.active { display: block; }
-        
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .mode-btn {
-            padding: 12px 24px;
-            background: rgba(17,24,32,0.8);
-            border: 1px solid rgba(0,240,255,0.3);
-            border-radius: 4px;
-            color: var(--text);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .mode-btn:hover {
-            background: rgba(0,240,255,0.1);
-            border-color: var(--neon-blue);
-        }
-        
-        .mode-btn.active {
-            background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(0,255,65,0.2));
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0,240,255,0.3);
-        }
-        
-        .main-panel {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-        }
-        
-        .panel {
-            background: rgba(17,24,32,0.8);
-            border: 1px solid rgba(0,240,255,0.2);
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .panel-header {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--neon-blue);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(0,240,255,0.2);
-            display: flex;
-            justify-content: space-between;
+            gap: 4px;
             align-items: center;
         }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-box {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0,240,255,0.2);
-            border-radius: 4px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        
-        .stat-value.hits { color: var(--pcb-green); }
-        .stat-value.bad { color: var(--error); }
-        .stat-value.err { color: var(--warning); }
-        
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--neon-blue), var(--pcb-green));
-            transition: width 0.3s;
-            position: relative;
-        }
-        
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 1.5s infinite;
-        }
-        
-        .thought-window {
-            margin-top: 20px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(0,240,255,0.2);
-            border-radius: 4px;
-            height: 180px;
-            overflow: hidden;
-        }
-        
-        .thought-header {
-            background: rgba(0,240,255,0.1);
-            padding: 10px 15px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            color: var(--neon-blue);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .thought-icon {
-            width: 20px; height: 20px;
+        .ai-dot {
+            width: 6px;
+            height: 6px;
+            background: #00ff9d;
             border-radius: 50%;
-            background: var(--pcb-green);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            animation: think 1s infinite;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+        .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+        .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
         }
         
-        @keyframes think {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .thought-log {
+            border-left: 2px solid #00ff9d40;
+            padding-left: 12px;
+            margin-left: 8px;
         }
         
-        .thought-content {
-            padding: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 11px;
-            color: var(--text-dim);
-            height: calc(100% - 40px);
-            overflow-y: auto;
+        /* Country Detection Sources */
+        .country-sources {
+            font-size: 9px;
+            color: #666;
         }
-        
-        .thought-line {
-            margin-bottom: 5px;
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
+        .country-sources span {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-right: 2px;
         }
-        
-        @keyframes fadeIn { to { opacity: 1; } }
-        
-        .thought-line .time {
-            color: var(--neon-blue);
-            margin-right: 8px;
-        }
-        
-        .popup-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .popup-overlay.active { display: flex; }
-        
-        .popup-box {
-            width: 400px;
-            background: var(--bg-panel);
-            border: 2px solid var(--neon-blue);
-            border-radius: 8px;
-            animation: popIn 0.3s ease-out;
-            overflow: hidden;
-        }
-        
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .popup-header {
-            background: linear-gradient(135deg, var(--neon-blue), var(--pcb-green));
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .popup-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--bg-dark);
-            font-weight: 700;
-        }
-        
-        .popup-close {
-            background: none;
-            border: none;
-            color: var(--bg-dark);
-            font-size: 20px;
-            cursor: pointer;
-        }
-        
-        .popup-body { padding: 20px; }
-        
-        .popup-text {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .popup-text .highlight {
-            color: var(--neon-blue);
-            font-weight: 700;
-        }
-        
-        .popup-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--neon-blue);
-            border: none;
-            border-radius: 4px;
-            color: var(--bg-dark);
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .popup-btn:hover { background: var(--pcb-green); }
-        
-        .file-drop {
-            border: 2px dashed rgba(0,240,255,0.3);
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .file-drop:hover {
-            border-color: var(--neon-blue);
-            background: rgba(0,240,255,0.05);
-        }
-        
-        .file-icon { font-size: 40px; margin-bottom: 10px; }
-        .file-text { color: var(--text-dim); font-size: 14px; }
-        .file-info {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 10px;
-        }
+        .source-active { background: #00ff9d30; color: #00ff9d; }
+        .source-fallback { background: #ffa50030; color: #ffa500; }
     </style>
 </head>
-<body>
-    <div class="circuit-bg"></div>
-    
-    <div class="app-container">
-        <header>
-            <div class="logo">⚡ BOLTFM ⚡</div>
-            <div class="header-status">
-                <div class="status-item">
-                    <div class="status-dot"></div>
-                    <span>CONNECTED</span>
-                </div>
-                <div class="status-item"><span id="cpuDisplay">CPU: --%</span></div>
-                <div class="status-item"><span id="memDisplay">RAM: --</span></div>
-                <select class="font-select" onchange="document.body.style.fontFamily=this.value" style="margin-left:10px;display:none">
-                    <option value="'Rajdhani', sans-serif">Rajdhani</option>
+<body class="bg-gray-950 text-white">
+
+<div class="h-screen w-full flex flex-col">
+    <!-- TOP BAR -->
+    <div class="bg-gray-900/90 border-b border-gray-800 px-5 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-bolt text-black text-lg"></i>
             </div>
-        </header>
-        
-        <div class="login-panel" id="loginPanel">
-            <div class="login-box">
-                <div class="beta-badge">BETA</div>
-                <div class="login-title">🔐 HWID AUTH</div>
-                
-                <div class="input-group">
-                    <label>Hardware ID</label>
-                    <div class="hwid-display" id="hwidDisplay">Generating HWID...</div>
-                </div>
-                
-                <div class="input-group">
-                    <label>Beta Code</label>
-                    <input type="text" placeholder="Enter beta code" id="betaCode">
-                </div>
-                
-                <button class="btn-login" onclick="login()">INITIALIZE</button>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight">BoltFN <span class="text-emerald-400">AURORA PRO</span></h1>
+                <p class="text-[10px] text-gray-400 -mt-0.5">REAL CHECKER • Microsoft + Epic Games • Full DLC Capture</p>
             </div>
         </div>
-        
-        <div class="dashboard" id="dashboard">
-            <div class="toolbar">
-                <button class="mode-btn active" onclick="setMode('hotmail')">📧 HOTMAIL</button>
-                <button class="mode-btn" onclick="setMode('attachments')">📎 ATTACHMENTS</button>
-                <button class="mode-btn" onclick="setMode('fortnite')">🎮 FORTNITE</button>
+        <div class="flex items-center gap-3">
+            <div class="bg-gray-800 rounded-full px-4 py-2 flex items-center gap-2">
+                <span class="pulse-dot w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <span class="text-xs font-medium" id="statusText">Ready</span>
             </div>
-            
-            <div class="main-panel">
-                <div class="panel" id="checkerPanel">
-                    <div class="panel-header">
-                        <span>CHECKER</span>
-                        <span id="modeDisplay">HOTMAIL MODE</span>
+            <div class="bg-gray-800 rounded-full px-4 py-2 text-xs font-mono" id="timerDisplay">00:00:00</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- LEFT PANEL -->
+        <div class="w-[480px] border-r border-gray-800 flex flex-col bg-gray-900/50">
+            <!-- Combo Input -->
+            <div class="p-4 border-b border-gray-800">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-emerald-400">COMBO INPUT</h3>
+                    <div class="flex gap-1">
+                        <button onclick="pasteCombo()" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-[10px]">
+                            <i class="fa-solid fa-paste"></i> Paste
+                        </button>
+                        <button onclick="clearCombo()" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-[10px]">
+                            <i class="fa-solid fa-trash"></i> Clear
+                        </button>
                     </div>
-                    
-                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
-                        <div class="file-icon" style="font-size:20px">📁</div>
-                        <div class="file-text" style="font-size:11px">Drop file / paste clipboard</div>
-                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
-                        <button onclick="event.stopPropagation();pasteFromClipboard()" style="margin-top:5px;padding:5px 10px;background:rgba(0,240,255,0.2);border:1px solid var(--neon-blue);color:var(--neon-blue);border-radius:3px;cursor:pointer;font-size:10px">📋 PASTE CLIP</button>
+                </div>
+                <textarea id="comboInput" class="w-full h-32 bg-gray-950 border border-gray-700 rounded-lg p-2 text-xs font-mono resize-none focus:outline-none focus:border-emerald-400" placeholder="email:password&#10;one per line"></textarea>
+            </div>
+
+            <!-- Proxy Input -->
+            <div class="p-4 border-b border-gray-800">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-emerald-400">PROXIES (Optional)</h3>
+                    <button onclick="loadProxies()" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-[10px]">
+                        <i class="fa-solid fa-upload"></i> Load
+                    </button>
+                </div>
+                <textarea id="proxyInput" class="w-full h-20 bg-gray-950 border border-gray-700 rounded-lg p-2 text-xs font-mono resize-none focus:outline-none focus:border-emerald-400" placeholder="ip:port"></textarea>
+                <div class="text-[10px] text-gray-500 mt-1" id="proxyCount">No proxies loaded</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="p-4 border-b border-gray-800">
+                <h3 class="text-sm font-bold text-emerald-400 mb-3">LIVE STATISTICS</h3>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-emerald-400" id="stat_hits">0</div>
+                        <div class="text-[10px] text-gray-400">HITS</div>
                     </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <div class="input-group">
-                            <label>Threads</label>
-                            <input type="number" value="15" id="threads" style="width: 100px;">
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Category</label>
-                            <select id="keyword">
-                                <option value="">-- Select Service --</option>
-                                <optgroup label="Streaming">
-                                    <option value="netflix">Netflix</option>
-                                    <option value="spotify">Spotify</option>
-                                    <option value="disney">Disney+</option>
-                                    <option value="hulu">Hulu</option>
-                                    <option value="prime">Prime Video</option>
-                                    <option value="youtube">YouTube Premium</option>
-                                    <option value="hbomax">HBO Max</option>
-                                    <option value="paramount">Paramount+</option>
-                                </optgroup>
-                                <optgroup label="Gaming">
-                                    <option value="xbox">Xbox Live</option>
-                                    <option value="playstation">PlayStation</option>
-                                    <option value="steam">Steam</option>
-                                    <option value="epic">Epic Games</option>
-                                    <option value="nintendo">Nintendo</option>
-                                    <option value="ea">EA Play</option>
-                                    <option value="ubisoft">Ubisoft+</option>
-                                </optgroup>
-                                <optgroup label="Crypto/Finance">
-                                    <option value="binance">Binance</option>
-                                    <option value="coinbase">Coinbase</option>
-                                    <option value="kraken">Kraken</option>
-                                    <option value="paypal">PayPal</option>
-                                    <option value="revolut">Revolut</option>
-                                    <option value="wise">Wise</option>
-                                    <option value="cashapp">Cash App</option>
-                                </optgroup>
-                                <optgroup label="Social/AI">
-                                    <option value="facebook">Facebook</option>
-                                    <option value="instagram">Instagram</option>
-                                    <option value="twitter">Twitter/X</option>
-                                    <option value="tiktok">TikTok</option>
-                                    <option value="chatgpt">ChatGPT</option>
-                                    <option value="claude">Claude AI</option>
-                                    <option value="midjourney">Midjourney</option>
-                                </optgroup>
-                                <optgroup label="Email/Tools">
-                                    <option value="gmail">Gmail</option>
-                                    <option value="outlook">Outlook</option>
-                                    <option value="proton">Proton Mail</option>
-                                    <option value="zoho">Zoho</option>
-                                    <option value="icloud">iCloud</option>
-                                </optgroup>
-                                <optgroup label="Shopping">
-                                    <option value="amazon">Amazon</option>
-                                    <option value="ebay">eBay</option>
-                                    <option value="etsy">Etsy</option>
-                                    <option value="shopify">Shopify</option>
-                                    <option value="aliexpress">AliExpress</option>
-                                </optgroup>
-                                <optgroup label="Aussie Services">
-                                    <option value="afterpay">Afterpay</option>
-                                    <option value="payid">PayID</option>
-                                    <option value="centrelink">Centrelink</option>
-                                    <option value="myob">MYOB</option>
-                                    <option value="xero">Xero</option>
-                                </optgroup>
-                                <optgroup label="Wellness/Cannabis">
-                                    <option value="cannatrek">Cannatrek</option>
-                                    <option value="solta">Solta</option>
-                                    <option value="cannamed">Cannamed</option>
-                                    <option value="weedmaps">Weedmaps</option>
-                                    <option value="leafly">Leafly</option>
-                                    <option value="honahlee">Honahlee</option>
-                                    <option value="mctears">MCTears</option>
-                                </optgroup>
-                                <optgroup label="Betting/Lotto">
-                                    <option value="pointsbet">Pointsbet</option>
-                                    <option value="bet365">Bet365</option>
-                                    <option value="palmerbet">Palmerbet</option>
-                                    <option value="neds">Neds</option>
-                                    <option value="tab">TAB</option>
-                                    <option value="ozlotto">Oz Lotto</option>
-                                    <option value="powerball">Powerball</option>
-                                </optgroup>
-                            </select>
-                        </div>
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-blue-400" id="stat_mshit">0</div>
+                        <div class="text-[10px] text-gray-400">MS-HIT</div>
                     </div>
-                    
-                    <div class="btn-row">
-                        <button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button>
-                        <button class="btn-stop" onclick="stopCheck()">⏹ STOP</button>
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-yellow-400" id="stat_custom">0</div>
+                        <div class="text-[10px] text-gray-400">2FA</div>
                     </div>
-                    
-                    <div class="btn-row" style="margin-top:10px">
-                        <button class="btn-export" onclick="exportHits('txt')" style="flex:1;padding:8px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:3px;cursor:pointer;font-size:11px">↓ TXT</button>
-                        <button class="btn-export" onclick="exportHits('rar')" style="flex:1;padding:8px;background:rgba(255,107,0,0.2);border:1px solid var(--warning);color:var(--warning);border-radius:3px;cursor:pointer;font-size:11px">↓ RAR</button>
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-red-400" id="stat_bad">0</div>
+                        <div class="text-[10px] text-gray-400">BAD</div>
+                    </div>
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-purple-400" id="stat_locked">0</div>
+                        <div class="text-[10px] text-gray-400">LOCKED</div>
+                    </div>
+                    <div class="bg-gray-950 rounded-lg p-2">
+                        <div class="text-xl font-bold text-cyan-400" id="stat_cpm">0</div>
+                        <div class="text-[10px] text-gray-400">CPM</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="p-4">
+                <div class="space-y-2">
+                    <button id="mainAction" onclick="toggleScan()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i>
+                        START CHECKING
+                    </button>
+                    <button id="pauseBtn" onclick="togglePause()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-pause"></i>
+                        PAUSE
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="clearHits()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-xl text-sm">
+                            <i class="fa-solid fa-trash"></i> Clear Hits
+                        </button>
+                        <button onclick="exportHits()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-xl text-sm">
+                            <i class="fa-solid fa-download"></i> Export
+                        </button>
                     </div>
                 </div>
                 
-                <div class="panel-sidebar">
-                    <div class="panel">
-                        <div class="panel-header"><span>STATS</span></div>
-                        
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <div class="stat-value hits" id="hitCount" style="font-size:32px">0</div>
-                                <div class="stat-label">Hits</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-value bad" id="badCount" style="font-size:32px">0</div>
-                                <div class="stat-label">Bad</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-value err" id="errCount" style="font-size:32px">0</div>
-                                <div class="stat-label">Errors</div>
-                            </div>
-                        </div>
-                        
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
-                        </div>
-                        <div style="text-align: center; font-size: 14px; color: var(--text-dim);" id="progressText">0 / 0</div>
+                <!-- Progress Bar -->
+                <div class="mt-4">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                        <span id="progressText">0 / 0</span>
+                        <span id="progressPercent">0%</span>
                     </div>
-                    
-                    <div class="panel-header" style="margin-bottom:10px"><span>HITS TABLE</span><span id="hitCount2" style="color:var(--pcb-green)">0</span></div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px;font-size:10px;color:var(--text-dim)">
-                        <div onclick="sortHits('service')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">SERVICE ↕</div>
-                        <div onclick="sortHits('email')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">EMAIL ↕</div>
-                        <div onclick="sortHits('time')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">TIME ↕</div>
-                        <div onclick="sortHits('proxy')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">PROXY ↕</div>
-                    </div>
-                    <div class="hits-table" id="hitsTable" style="max-height:500px;overflow-y:auto;font-size:11px">
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:5px;background:rgba(0,255,65,0.2);font-weight:bold">
-                            <div>SERVICE</div><div>EMAIL</div><div>TIME</div><div>PROXY</div>
-                        </div>
-                    </div>
-                    
-                    <div class="thought-window" style="height:140px;margin-top:10px">
-                        <div class="thought-header">
-                            <div class="thought-icon">🤔</div>
-                            <span>BOT THINKING</span>
-                        </div>
-                        <div class="thought-content" id="thoughtContent" style="font-size:12px">
-                            <div class="thought-line"><span class="time">[21:23:55]</span>Ready...</div>
-                        </div>
-                    </div>
-                    
-                    <div class="thought-window" style="height:140px;background:rgba(0,240,255,0.05)">
-                        <div class="thought-header" style="border-color:var(--neon-blue)">
-                            <div class="thought-icon">📋</div>
-                            <span>RAW LOG</span>
-                        </div>
-                        <div class="thought-content" id="rawLogContent" style="color:var(--neon-blue);font-size:10px"></div>
+                    <div class="h-2 bg-gray-950 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 progress-bar" style="width: 0%"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- System Info Widget -->
+            <div class="p-4 border-t border-gray-800 bg-gray-900/30">
+                <h3 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i> SYSTEM INFO
+                    <button onclick="toggleAISidebar()" class="ml-auto px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-[10px]">
+                        <i class="fa-solid fa-robot"></i> AI Assist
+                    </button>
+                </h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- CPU Widget -->
+                    <div class="sys-widget bg-gray-950 rounded-lg p-2 cpu-bar cursor-default" id="cpuWidget">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-gray-400"><i class="fa-solid fa-microchip"></i> CPU</span>
+                            <span class="text-xs font-bold text-emerald-400" id="cpuUsage">0%</span>
+                        </div>
+                        <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="cpuBar" class="h-full bg-emerald-400" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- RAM Widget -->
+                    <div class="sys-widget bg-gray-950 rounded-lg p-2 ram-indicator cursor-default" id="ramWidget">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-gray-400"><i class="fa-solid fa-memory"></i> RAM</span>
+                            <span class="text-xs font-bold text-blue-400" id="ramUsage">0%</span>
+                        </div>
+                        <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="ramBar" class="h-full bg-blue-400" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Network Widget -->
+                    <div class="sys-widget bg-gray-950 rounded-lg p-2 cursor-default" id="netWidget">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] text-gray-400"><i class="fa-solid fa-network-wired"></i> NET</span>
+                            <span class="text-xs font-bold text-purple-400" id="netSpeed">↑0 ↓0</span>
+                        </div>
+                        <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="netBar" class="h-full net-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-[9px] text-gray-500 mt-1">
+                    <span id="cpuTemp">--°C</span>
+                    <span id="ramDetail">0 / 0 MB</span>
+                    <span id="netTotal">0 MB transferred</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Sidebar (Hidden by default) -->
+        <div id="aiSidebar" class="w-80 border-l border-gray-800 flex flex-col bg-gray-900/50 hidden">
+            <div class="bg-gray-900/70 border-b border-gray-800 px-4 py-2 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-robot"></i> AI Assistant</h3>
+                <button onclick="toggleAISidebar()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- AI Help Content -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-3">
+                <!-- Quick Help Cards -->
+                <div class="bg-gray-950 rounded-lg p-3">
+                    <h4 class="text-xs font-bold text-emerald-400 mb-2"><i class="fa-solid fa-circle-question"></i> Quick Help</h4>
+                    <div class="space-y-2 text-[10px]">
+                        <button onclick="aiHelp('combos')" class="w-full text-left px-2 py-1 bg-gray-900 rounded hover:bg-gray-800 text-gray-300">
+                            How do I add combos?
+                        </button>
+                        <button onclick="aiHelp('proxies')" class="w-full text-left px-2 py-1 bg-gray-900 rounded hover:bg-gray-800 text-gray-300">
+                            How do proxies work?
+                        </button>
+                        <button onclick="aiHelp('export')" class="w-full text-left px-2 py-1 bg-gray-900 rounded hover:bg-gray-800 text-gray-300">
+                            How to export hits?
+                        </button>
+                        <button onclick="aiHelp('country')" class="w-full text-left px-2 py-1 bg-gray-900 rounded hover:bg-gray-800 text-gray-300">
+                            Country detection?
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Settings Info -->
+                <div class="bg-gray-950 rounded-lg p-3">
+                    <h4 class="text-xs font-bold text-blue-400 mb-2"><i class="fa-solid fa-gear"></i> Settings Help</h4>
+                    <div class="text-[10px] text-gray-400 space-y-1">
+                        <p><span class="text-emerald-400">Proxies:</span> Use HTTP/SOCKS4/SOCKS5 proxies to avoid IP bans. Format: ip:port or user:pass@ip:port</p>
+                        <p><span class="text-emerald-400">Threads:</span> Higher = faster but more likely to get rate limited. Start with 15-25.</p>
+                        <p><span class="text-emerald-400">Retries:</span> Number of attempts per combo before marking as bad.</p>
+                        <p><span class="text-emerald-400">Timeout:</span> Max wait time for server response in milliseconds.</p>
+                    </div>
+                </div>
+                
+                <!-- AI Thought Log -->
+                <div class="bg-gray-950 rounded-lg p-3">
+                    <h4 class="text-xs font-bold text-yellow-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-brain"></i> Thought Log
+                        <span class="ml-auto text-[9px] text-gray-500">App Activity</span>
+                    </h4>
+                    <div id="aiThoughtLog" class="text-[10px] text-gray-400 space-y-1 thought-log max-h-32 overflow-y-auto">
+                        <div><span class="text-emerald-400">→</span> App started, waiting for input...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Response Area -->
+            <div class="border-t border-gray-800 p-3">
+                <div id="aiResponse" class="min-h-[60px] bg-gray-950 rounded-lg p-2 text-[10px] text-gray-300">
+                    <span class="ai-thinking hidden" id="aiThinking">
+                        <span class="ai-dot"></span>
+                        <span class="ai-dot"></span>
+                        <span class="ai-dot"></span>
+                        <span class="ml-2">Thinking...</span>
+                    </span>
+                    <span id="aiText">Hi! I'm your BoltFN assistant. Need help? Click a question above or ask me anything about the checker.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="flex-1 flex flex-col" id="rightPanel">
+            <!-- Hits Feed -->
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <div class="bg-gray-900/50 border-b border-gray-800 px-4 py-2 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-emerald-400">LIVE HITS FEED</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-400" id="hitCount">0 hits</span>
+                    </div>
+                </div>
+                <div id="hitsFeed" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+            </div>
+
+            <!-- Log -->
+            <div class="h-48 border-t border-gray-800 flex flex-col bg-gray-900/50">
+                <div class="bg-gray-900/70 border-b border-gray-800 px-4 py-2 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-emerald-400">SYSTEM LOG</h3>
+                    <button onclick="clearLog()" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-[10px]">
+                        <i class="fa-solid fa-trash"></i> Clear
+                    </button>
+                </div>
+                <div id="miniLog" class="flex-1 overflow-y-auto p-3 log-area text-gray-300"></div>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+// WebSocket connection
+const socket = io();
+let isRunning = false;
+let isPaused = false;
+let totalCombos = 0;
+let checkedCount = 0;
+let startTime = null;
+let timerInterval = null;
+const hitsList = [];
+
+// Socket event handlers
+socket.on('connect', () => {
+    addLog('✅ Connected to server', 'success');
+});
+
+socket.on('scan_started', (data) => {
+    addLog(`🚀 ${data.message}`, 'info');
+    totalCombos = data.total;
+    checkedCount = 0;
+    updateProgress();
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    document.getElementById('statusText').textContent = 'Scanning...';
+    document.getElementById('mainAction').innerHTML = '<i class="fa-solid fa-stop"></i> STOP CHECKING';
+});
+
+socket.on('scan_status', (data) => {
+    addLog(`🔍 Checking: ${data.email} [${data.index}/${data.total}]`);
+});
+
+socket.on('stats_update', (stats) => {
+    document.getElementById('stat_hits').textContent = stats.hits;
+    document.getElementById('stat_mshit').textContent = stats.mshit;
+    document.getElementById('stat_custom').textContent = stats.custom;
+    document.getElementById('stat_bad').textContent = stats.bad;
+    document.getElementById('stat_locked').textContent = stats.locked;
+    document.getElementById('stat_cpm').textContent = stats.cpm;
     
-    <!-- Popup Overlay -->
-    <div class="popup-overlay" id="popupOverlay">
-        <div class="popup-box">
-            <div class="popup-header">
-                <span class="popup-title" id="popupTitle">G'DAY MATE!</span>
-                <button class="popup-close" onclick="closePopup()">×</button>
-            </div>
-            <div class="popup-body">
-                <div class="popup-text" id="popupText"></div>
-                <button class="popup-btn" onclick="closePopup()">CHEERS!</button>
-            </div>
-        </div>
-    </div>
+    checkedCount = stats.checked;
+    updateProgress();
+});
+
+socket.on('hit_found', (result) => {
+    hitsList.push(result);
+    displayHit(result);
+    document.getElementById('hitCount').textContent = `${hitsList.length} hits`;
     
-    <script>
-        function generateHWID() {
-            const chars = 'ABCDEF0123456789';
-            let hwid = '';
-            for(let i = 0; i < 32; i++) {
-                hwid += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return hwid;
+    if (result.status === 'hit') {
+        addLog(`✅ EPIC HIT: ${result.email} | ${result.country} | Skins: ${result.skins || 0} | V-Bucks: ${result.vbucks || 0}`, 'success');
+    } else if (result.status === 'mshit') {
+        addLog(`🔥 MS-HIT: ${result.email}`, 'warning');
+    } else if (result.status === '2fa') {
+        addLog(`⚠️ 2FA: ${result.email}`, 'info');
+    }
+});
+
+socket.on('scan_complete', (data) => {
+    addLog('✅ ' + data.message, 'success');
+    stopScanning();
+});
+
+socket.on('scan_stopped', (data) => {
+    addLog('⏹️ ' + data.message, 'info');
+    stopScanning();
+});
+
+socket.on('scan_paused', (data) => {
+    isPaused = data.status === 'paused';
+    document.getElementById('pauseBtn').innerHTML = isPaused 
+        ? '<i class="fa-solid fa-play"></i> RESUME' 
+        : '<i class="fa-solid fa-pause"></i> PAUSE';
+    addLog(isPaused ? '⏸️ Paused' : '▶️ Resumed', 'info');
+});
+
+socket.on('proxies_loaded', (data) => {
+    document.getElementById('proxyCount').textContent = `${data.count} proxies loaded`;
+    addLog(`📡 Loaded ${data.count} proxies`, 'success');
+});
+
+socket.on('error', (data) => {
+    addLog('❌ ' + data.message, 'error');
+});
+
+// UI Functions
+function toggleScan() {
+    if (isRunning) {
+        socket.emit('stop_scan');
+    } else {
+        const combos = document.getElementById('comboInput').value.trim();
+        if (!combos) {
+            addLog('❌ Enter combos first', 'error');
+            return;
         }
         
-        function updateSystemInfo() {
-            if(navigator.memory) {
-                const mem = navigator.memory.jsHeapSizeLimit / (1024*1024*1024);
-                document.getElementById('memDisplay').textContent = 'RAM: ' + mem.toFixed(1) + 'GB';
-            }
-            const cpu = Math.floor(Math.random() * 30 + 10);
-            document.getElementById('cpuDisplay').textContent = 'CPU: ' + cpu + '%';
+        isRunning = true;
+        socket.emit('start_scan', { combos });
+    }
+}
+
+function togglePause() {
+    if (!isRunning) return;
+    socket.emit('pause_scan');
+}
+
+function stopScanning() {
+    isRunning = false;
+    isPaused = false;
+    clearInterval(timerInterval);
+    document.getElementById('statusText').textContent = 'Ready';
+    document.getElementById('mainAction').innerHTML = '<i class="fa-solid fa-play"></i> START CHECKING';
+    document.getElementById('pauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i> PAUSE';
+}
+
+function loadProxies() {
+    const proxies = document.getElementById('proxyInput').value.trim();
+    if (proxies) {
+        socket.emit('load_proxies', { proxies });
+    }
+}
+
+function showDetails(result) {
+    alert(JSON.stringify(result, null, 2));
+}
+
+function addLog(message, type = 'info') {
+    const log = document.getElementById('miniLog');
+    const time = new Date().toLocaleTimeString();
+    let color = 'text-gray-300';
+    
+    if (type === 'success') color = 'text-emerald-400';
+    else if (type === 'error') color = 'text-red-400';
+    else if (type === 'warning') color = 'text-yellow-400';
+    
+    const line = document.createElement('div');
+    line.className = color;
+    line.textContent = `[${time}] ${message}`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+}
+
+function updateTimer() {
+    if (!startTime) return;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const hours = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (elapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function updateProgress() {
+    if (totalCombos === 0) return;
+    const percent = Math.floor((checkedCount / totalCombos) * 100);
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressText').textContent = `${checkedCount} / ${totalCombos}`;
+    document.getElementById('progressPercent').textContent = percent + '%';
+}
+
+function pasteCombo() {
+    navigator.clipboard.readText().then(text => {
+        document.getElementById('comboInput').value = text;
+        addLog('📋 Pasted from clipboard', 'success');
+    }).catch(() => {
+        addLog('❌ Cannot access clipboard', 'error');
+    });
+}
+
+function clearCombo() {
+    document.getElementById('comboInput').value = '';
+    addLog('🗑️ Cleared combos', 'info');
+}
+
+function clearHits() {
+    document.getElementById('hitsFeed').innerHTML = '';
+    hitsList.length = 0;
+    document.getElementById('hitCount').textContent = '0 hits';
+    addLog('🗑️ Cleared hits', 'info');
+}
+
+function clearLog() {
+    document.getElementById('miniLog').innerHTML = '';
+}
+
+function exportHits() {
+    if (hitsList.length === 0) {
+        addLog('❌ No hits to export', 'error');
+        return;
+    }
+    
+    let content = '';
+    hitsList.forEach(hit => {
+        if (hit.status === 'hit') {
+            content += `[EPIC HIT] ${hit.email}:${hit.password}\n`;
+            content += `Display Name: ${hit.display_name}\n`;
+            content += `Country: ${hit.country} | Verified: ${hit.email_verified}\n`;
+            content += `V-Bucks: ${hit.vbucks} | Skins: ${hit.skins} | Emotes: ${hit.emotes}\n`;
+            content += `Pickaxes: ${hit.pickaxes} | Gliders: ${hit.gliders} | Backpacks: ${hit.backpacks}\n`;
+            content += `Total Items: ${hit.total_items}\n`;
+            content += '='.repeat(80) + '\n\n';
+        } else {
+            content += `[${hit.type.toUpperCase()}] ${hit.email}\n`;
         }
-        setInterval(updateSystemInfo, 2000);
-        updateSystemInfo();
+    });
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `boltfn_hits_${Date.now()}.txt`;
+    a.click();
+    addLog(`💾 Exported ${hitsList.length} hits`, 'success');
+}
+
+// ===============================
+// System Info Widget Functions
+// ===============================
+let sysUpdateInterval = null;
+
+// Get CPU usage (simulated due to browser limitations)
+function getCpuUsage() {
+    // Browser can only estimate based on responsiveness
+    const start = performance.now();
+    // Simple CPU estimate based on main thread responsiveness
+    const load = Math.random() * 30 + (isRunning ? 20 : 0); // Baseline + scan activity
+    return Math.min(Math.round(load + Math.random() * 10), 100);
+}
+
+// Get RAM info (approximate from Performance API)
+function getRamUsage() {
+    if (performance.memory) {
+        const used = performance.memory.usedJSHeapSize;
+        const total = performance.memory.jsHeapSizeLimit;
+        return {
+            used: Math.round(used / 1048576), // MB
+            total: Math.round(total / 1048576), // MB
+            percent: Math.round((used / total) * 100)
+        };
+    }
+    return { used: 0, total: 0, percent: 0 };
+}
+
+// Update System Info Widget
+function updateSystemInfo() {
+    const cpu = getCpuUsage();
+    const ram = getRamUsage();
+    
+    // Update CPU
+    document.getElementById('cpuUsage').textContent = cpu + '%';
+    document.getElementById('cpuBar').style.width = cpu + '%';
+    
+    // CPU color based on load
+    const cpuBar = document.getElementById('cpuBar');
+    if (cpu > 80) {
+        cpuBar.className = 'h-full bg-red-500';
+    } else if (cpu > 50) {
+        cpuBar.className = 'h-full bg-yellow-400';
+    } else {
+        cpuBar.className = 'h-full bg-emerald-400';
+    }
+    
+    // Update RAM
+    document.getElementById('ramUsage').textContent = ram.percent + '%';
+    document.getElementById('ramBar').style.width = ram.percent + '%';
+    document.getElementById('ramDetail').textContent = `${ram.used} / ${ram.total} MB`;
+    
+    // RAM color based on usage
+    const ramBar = document.getElementById('ramBar');
+    if (ram.percent > 90) {
+        ramBar.className = 'h-full bg-red-500';
+    } else if (ram.percent > 70) {
+        ramBar.className = 'h-full bg-yellow-400';
+    } else {
+        ramBar.className = 'h-full bg-blue-400';
+    }
+    
+    // Update Network (simulated - real impl would need backend)
+    const netUp = (Math.random() * 5).toFixed(1);
+    const netDown = (Math.random() * 20).toFixed(1);
+    document.getElementById('netSpeed').textContent = `↑${netUp} ↓${netDown}`;
+    document.getElementById('netTotal').textContent = `${(Math.random() * 100).toFixed(0)} MB`;
+}
+
+// Start System Info polling
+function startSystemInfo() {
+    if (sysUpdateInterval) clearInterval(sysUpdateInterval);
+    updateSystemInfo(); // Initial update
+    sysUpdateInterval = setInterval(updateSystemInfo, 2000);
+}
+
+// Stop System Info polling
+function stopSystemInfo() {
+    if (sysUpdateInterval) {
+        clearInterval(sysUpdateInterval);
+        sysUpdateInterval = null;
+    }
+    // Reset displays
+    document.getElementById('cpuUsage').textContent = '0%';
+    document.getElementById('cpuBar').style.width = '0%';
+    document.getElementById('ramUsage').textContent = '0%';
+    document.getElementById('ramBar').style.width = '0%';
+    document.getElementById('ramDetail').textContent = '0 / 0 MB';
+    document.getElementById('netSpeed').textContent = '↑0 ↓0';
+    document.getElementById('netTotal').textContent = '0 MB';
+}
+
+// ===============================
+// AI Assistant Functions
+// ===============================
+function toggleAISidebar() {
+    const sidebar = document.getElementById('aiSidebar');
+    const rightPanel = document.getElementById('rightPanel');
+    sidebar.classList.toggle('hidden');
+    
+    if (rightPanel) {
+        rightPanel.style.flex = sidebar.classList.contains('hidden') ? '1' : '0';
+        rightPanel.classList.toggle('w-[calc(100%-320px)]');
+    }
+}
+
+function aiHelp(topic) {
+    const thinking = document.getElementById('aiThinking');
+    const text = document.getElementById('aiText');
+    
+    // Show thinking
+    thinking.classList.remove('hidden');
+    text.classList.add('hidden');
+    
+    // Add to thought log
+    addThoughtLog(`Processing: ${topic}...`);
+    
+    // Get response based on topic
+    let response = '';
+    switch(topic) {
+        case 'combos':
+            response = 'To add combos, either paste them from clipboard (click "Paste" button) or type/load them directly. Each combo should be in format email:password, one per line. The checker will automatically filter invalid formats.';
+            break;
+        case 'proxies':
+            response = 'Proxies help avoid IP bans. Enter proxies in format ip:port (e.g., 192.168.1.1:8080) or with auth user:pass@ip:port. Leave empty to check without proxies (higher ban risk). HTTP/SOCKS4/SOCKS5 supported.';
+            break;
+        case 'export':
+            response = 'Click "Export" button to save all captured hits. Exports to a formatted .txt file with all account details including display name, skins, V-Bucks, etc. Can be opened in any text editor.';
+            break;
+        case 'country':
+            response = 'Country detection uses multiple sources for accuracy: (1) Profile page country data from Epic, (2) Account timezone, (3) Signup country. IP geolocation alone is unreliable - many hits show Australia from datacenter IPs that are actually from elsewhere!';
+            break;
+        default:
+            response = 'I\'m your BoltFN assistant! I can help with combos, proxies, exports, country detection, and general checker settings. Just ask!';
+    }
+    
+    // Simulate thinking delay
+    setTimeout(() => {
+        thinking.classList.add('hidden');
+        text.classList.remove('hidden');
+        text.textContent = response;
         
-        document.getElementById('hwidDisplay').textContent = generateHWID();
+        addThoughtLog(`Answered: ${topic}`);
+    }, 800);
+}
+
+function addThoughtLog(message) {
+    const log = document.getElementById('aiThoughtLog');
+    const entry = document.createElement('div');
+    const time = new Date().toLocaleTimeString();
+    entry.innerHTML = `<span class="text-emerald-400">→</span> ${time} - ${message}`;
+    log.insertBefore(entry, log.firstChild);
+    
+    // Keep max 20 entries
+    while (log.children.length > 20) {
+        log.removeChild(log.lastChild);
+    }
+}
+
+// ===============================
+// Enhanced Country Detection UI
+// ===============================
+function displayHit(result) {
+    const feed = document.getElementById('hitsFeed');
+    const card = document.createElement('div');
+    card.className = 'hit-card rounded-xl p-3 cursor-pointer';
+    
+    let content = '';
+    
+    if (result.status === 'hit') {
+        // Enhanced country detection display with source indicators
+        const regionClass = `region-${result.country || 'Unknown'}`;
+        const countrySource = result.country_source || 'ip'; // ip, profile, timezone, signup
         
-        const aussieSayings = [
-            "G'day mate! You're cookin' now! 🔥",
-            "Oi! That's a ripper of an idea! 🎉",
-            "Ta-da! No worries at all! ✅",
-            "Bloody oath! This is gonna be legends! 🦘",
-            "She'll be right! Let's crack on! 💪",
-            "Too easy, bro! You're onto a winner! 🚀",
-            "Good on ya! The boys'll love this! 🍺",
-            "Crikey! That's absolutely heaps good! ⭐"
-        ];
-        
-        function showPopup(title, text) {
-            document.getElementById('popupTitle').textContent = title;
-            document.getElementById('popupText').innerHTML = text;
-            document.getElementById('popupOverlay').classList.add('active');
+        let sourceBadges = '<div class="country-sources mt-1">';
+        sourceBadges += `<span class="source-active">${countrySource.toUpperCase()}</span>`;
+        if (result.timezone) {
+            sourceBadges += `<span class="source-fallback">TZ</span>`;
         }
+        sourceBadges += '</div>';
         
-        function closePopup() {
-            document.getElementById('popupOverlay').classList.remove('active');
-        }
+        // Display name with verification status
+        const verifiedBadge = result.email_verified 
+            ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs ml-1"></i>' 
+            : '<i class="fa-solid fa-circle-exclamation text-yellow-400 text-xs ml-1"></i>';
         
-        function login() {
-            const beta = document.getElementById('betaCode').value;
-            
-            if(beta.length < 5) {
-                showPopup("OI! 🚨", "You need a <span class='highlight'>proper beta code</span> mate! Ask the dev team!");
-                return;
-            }
-            
-            const saying = aussieSayings[Math.floor(Math.random() * aussieSayings.length)];
-            showPopup("LOGIN SUCCESS!", saying);
-            
-            setTimeout(() => {
-                closePopup();
-                document.getElementById('loginPanel').style.display = 'none';
-                document.getElementById('dashboard').classList.add('active');
-                addThought("🤔: Connected to MS auth servers... Ready to mod!");
-            }, 2000);
-        }
-        
-        function setMode(mode) {
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            const panelMain = document.getElementById('checkerPanel');
-            if(mode === 'hotmail') {
-                document.getElementById('modeDisplay').textContent = 'HOTMAIL MODE';
-                panelMain.innerHTML = `
-                    <div class="panel-header"><span>CHECKER</span><span id="modeDisplay">HOTMAIL MODE</span></div>
-                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
-                        <div class="file-icon" style="font-size:20px">📁</div>
-                        <div class="file-text" style="font-size:11px">Drop file / paste clipboard</div>
-                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
-                        <button onclick="event.stopPropagation();pasteFromClipboard()" style="margin-top:5px;padding:5px 10px;background:rgba(0,240,255,0.2);border:1px solid var(--neon-blue);color:var(--neon-blue);border-radius:3px;cursor:pointer;font-size:10px">📋 PASTE CLIP</button>
+        content = `
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="${regionClass}">${result.country || 'XX'}</span>
+                        <span class="text-emerald-400 font-bold text-sm">${result.display_name || 'Unknown'}</span>
+                        ${verifiedBadge}
                     </div>
-                    <div style="margin-top:20px">
-                        <div class="input-group"><label>Threads</label><input type="number" value="15" id="threads"></div>
-                        <div class="input-group"><label>Category</label><select id="keyword">
-                            <option value="">-- Select Service --</option>
-                            <optgroup label="Streaming"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="disney">Disney+</option><option value="hulu">Hulu</option><option value="prime">Prime Video</option></optgroup>
-                            <optgroup label="Gaming"><option value="xbox">Xbox Live</option><option value="playstation">PlayStation</option><option value="steam">Steam</option><option value="epic">Epic Games</option><option value="nintendo">Nintendo</option></optgroup>
-                            <optgroup label="Crypto"><option value="binance">Binance</option><option value="coinbase">Coinbase</option><option value="kraken">Kraken</option><option value="paypal">PayPal</option></optgroup>
-                            <optgroup label="Social"><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="twitter">Twitter/X</option><option value="tiktok">TikTok</option></optgroup>
-                            <optgroup label="Email"><option value="gmail">Gmail</option><option value="outlook">Outlook</option><option value="proton">Proton Mail</option></optgroup>
-                        </select></div>
+                    <div class="text-[11px] text-gray-400 font-mono">${result.email}</div>
+                    ${sourceBadges}
+                    <div class="flex gap-3 mt-2 text-[10px]">
+                        <span>💰 ${result.vbucks || 0} V-Bucks</span>
+                        <span>👕 ${result.skins || 0} Skins</span>
+                        <span>💃 ${result.emotes || 0} Emotes</span>
+                        <span>⛏️ ${result.pickaxes || 0} Pickaxes</span>
                     </div>
-                    <div class="btn-row"><button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button><button class="btn-stop" onclick="stopCheck()">⏹ STOP</button></div>
-                    <div class="btn-row" style="margin-top:10px"><button onclick="exportHits('txt')" style="flex:1;padding:8px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:3px;cursor:pointer;font-size:11px">↓ TXT</button><button onclick="exportHits('rar')" style="flex:1;padding:8px;background:rgba(255,107,0,0.2);border:1px solid var(--warning);color:var(--warning);border-radius:3px;cursor:pointer;font-size:11px">↓ RAR</button></div>
-                `;
-            } else if(mode === 'attachments') {
-                document.getElementById('modeDisplay').textContent = 'ATTACHMENTS MODE';
-                panelMain.innerHTML = `
-                    <div class="panel-header"><span>📎 MAILBOX DOWNLOADER</span><span>ATTACHMENTS</span></div>
-                    <div class="input-group"><label>Email Address</label><input type="email" id="mailboxEmail" placeholder="email@example.com"></div>
-                    <div class="input-group"><label>Password</label><input type="password" id="mailboxPass" placeholder="Password"></div>
-                    <div class="input-group"><label>IMAP Server</label><input type="text" id="imapServer" placeholder="imap.example.com" value="outlook.office365.com"></div>
-                    <div class="input-group"><label>IMAP Port</label><input type="number" id="imapPort" value="993"></div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px">
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="sslBox" checked> SSL/TLS</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="saveAttachments" checked> Save Attachments</label>
-                    </div>
-                    <div class="input-group" style="margin-top:15px"><label>Attachment Types</label>
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;font-size:11px">
-                            <label><input type="checkbox" checked> PDF</label>
-                            <label><input type="checkbox" checked> Images</label>
-                            <label><input type="checkbox" checked> Docs</label>
-                            <label><input type="checkbox"> ZIP</label>
-                            <label><input type="checkbox"> Excel</label>
-                            <label><input type="checkbox"> All Files</label>
-                        </div>
-                    </div>
-                    <button class="btn-login" onclick="connectMailbox()" style="margin-top:20px">📥 CONNECT MAILBOX</button>
-                    <div class="thought-window" style="margin-top:15px;height:180px">
-                        <div class="thought-header"><div class="thought-icon">📬</div><span>MAIL MESSAGES</span></div>
-                        <div class="thought-content" id="mailContent" style="font-size:11px">
-                            <div style="padding:8px;border-bottom:1px solid rgba(0,240,255,0.2)"><span style="color:var(--pcb-green)">FROM:</span> sender@email.com <span style="color:var(--text-dim)">[12:30]</span><br>Subject line here</div>
-                        </div>
-                    </div>
-                    <div class="thought-window" style="margin-top:10px;height:120px;background:rgba(0,255,65,0.05)">
-                        <div class="thought-header" style="border-color:var(--pcb-green)"><div class="thought-icon">📎</div><span>ATTACHMENTS</span></div>
-                        <div class="thought-content" id="attachContent" style="font-size:11px"></div>
-                    </div>
-                `;
-            } else if(mode === 'fortnite') {
-                document.getElementById('modeDisplay').textContent = 'FORTNITE MODE';
-                panelMain.innerHTML = `
-                    <div class="panel-header"><span>🎮 FORTNITE CHECKER</span><span>FORTNITE</span></div>
-                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
-                        <div class="file-icon" style="font-size:20px">📁</div>
-                        <div class="file-text" style="font-size:11px">Drop Xbox combos</div>
-                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
-                    </div>
-                    <div style="margin-top:20px">
-                        <div class="input-group"><label>Threads</label><input type="number" value="10" id="threads"></div>
-                        <div class="input-group"><label>Mode</label><select id="fnMode"><option value="full">Full Capture</option><option value="brute">Brute Force</option></select></div>
-                    </div>
-                    <div class="btn-row"><button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button><button class="btn-stop" onclick="stopCheck()">⏹ STOP</button></div>
-                    <button onclick="exportHits('txt')" style="margin-top:10px;width:100%;padding:12px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:4px;cursor:pointer">↓ EXPORT HITS</button>
-                `;
-            }
-            addThought(`🤔: ${mode.toUpperCase()} mode loaded.`);
-        }
-        
-        function connectMailbox() {
-            const email = document.getElementById('mailboxEmail').value;
-            if(!email) { showPopup("ERROR", "Enter email address"); return; }
-            showPopup("CONNECTING...", `Connecting to <span class="highlight">${email}</span>...`);
-            addThought(`📬 Connecting to ${email}...`);
-            setTimeout(() => {
-                const mailEl = document.getElementById('mailContent');
-                const sampleEmails = [
-                    {from: 'noreply@netflix.com', subject: 'Your Netflix payment is due', time: '10:23'},
-                    {from: 'support@steam.com', subject: 'New login detected', time: '09:45'},
-                    {from: 'orders@amazon.com', subject: 'Order confirmed #12345', time: '08:12'}
-                ];
-                sampleEmails.forEach(m => {
-                    mailEl.innerHTML += `<div style="padding:8px;border-bottom:1px solid rgba(0,240,255,0.2);cursor:pointer" onclick="showMail('${m.from}','${m.subject}')"><span style="color:var(--pcb-green)">FROM:</span> ${m.from} <span style="color:var(--text-dim)">[${m.time}]</span><br>📧 ${m.subject}</div>`;
-                });
-                showPopup("CONNECTED! 📬", `<span class="highlight">3 messages</span> found!`);
-                addThought("📬 Mailbox connected! 3 messages found.");
-            }, 1500);
-        }
-        
-        function showMail(from, subject) {
-            addThought(`Opening: ${subject}`);
-            const attachEl = document.getElementById('attachContent');
-            attachEl.innerHTML = `<div style="padding:8px"><span style="color:var(--pcb-green)">FROM:</span> ${from}<br><span style="color:var(--neon-cyan)">SUBJECT:</span> ${subject}</div>
-                <div style="margin-top:8px;padding:8px;background:rgba(0,255,65,0.1);border-radius:4px">
-                    <div style="color:var(--text-dim);font-size:10px">ATTACHMENTS (2)</div>
-                    <div style="margin-top:5px;cursor:pointer;color:var(--pcb-green)" onclick="downloadAttach('invoice.pdf')">📄 invoice.pdf</div>
-                    <div style="cursor:pointer;color:var(--pcb-green)" onclick="downloadAttach('receipt.jpg')">🖼️ receipt.jpg</div>
-                </div>`;
-        }
-        
-        function downloadAttach(filename) {
-            addThought(`⬇ Downloading ${filename}...`);
-            showPopup("DOWNLOADING", `<span class="highlight">${filename}</span> downloading...`);
-        }
-        
-        let selectedFile = null;
-        let isRunning = false;
-        let isPaused = false;
-        let hitLogData = [];
-        let rawLogData = [];
-        function selectFile() {
-            addThought("🤔: User selecting file...");
-            selectedFile = "combos.txt";
-            document.getElementById('fileInfo').textContent = "814 combos loaded";
-            addThought("🤔: File loaded! Ready to crack on!");
-            showPopup("FILE LOADED!", "No worries! <span class='highlight'>814 combos</span> ready to check. Let's get to it!");
-        }
-        
-        function startCheck() {
-            if(!selectedFile) {
-                showPopup("HEY! 🎯", "You haven't loaded any <span class='highlight'>combos</span> yet! Add a file first!");
-                return;
-            }
-            isRunning = true;
-            isPaused = false;
-            addThought("🤔: Starting hotmail checker with 15 threads...");
-            showPopup("LET'S GO! 🏃‍♂️", "No dramas! Starting check now. Should be <span class='highlight'>quick</span>!");
-            
-            let hits = 0, bad = 0;
-            const interval = setInterval(() => {
-                if(!isRunning) { clearInterval(interval); return; }
-                if(isPaused) return;
-                if(Math.random() > 0.4) hits++;
-                else bad++;
-                
-                document.getElementById('hitCount').textContent = hits;
-                document.getElementById('badCount').textContent = bad;
-                
-                rawLog(`[CHECK] Testing combo ${hits+bad} - ${Math.random() > 0.4 ? 'VALID' : 'INVALID'}`);
-                addHitLog(`${hits}:${bad}@test:pass`);
-                document.getElementById('progressText').textContent = (hits + bad) + ' / 814';
-                
-                if(hits + bad >= 814) {
-                    clearInterval(interval);
-                    showPopup("DONE! 🎉", "Absolute legends! Found <span class='highlight'>" + hits + " hits</span>! Fair dinkum!");
-                }
-            }, 100);
-        }
-        
-        function addThought(text) {
-            const content = document.getElementById('thoughtContent');
-            const time = new Date().toLocaleTimeString('en-AU', {hour12: false});
-            const line = `<div class="thought-line"><span class="time">[${time}]</span>${text}</div>`;
-            content.innerHTML += line;
-            content.scrollTop = content.scrollHeight;
-        }
-        
-        function toggleStartPause() {
-            if(!isRunning) { startCheck(); return; }
-            isPaused = !isPaused;
-            document.getElementById('startBtn').textContent = isPaused ? "▶ RESUME" : "⏸ PAUSE";
-            addThought(isPaused ? "⏸ Check paused" : "▶ Resuming check...");
-        }
-        
-        function stopCheck() {
-            isRunning = false;
-            isPaused = false;
-            document.getElementById('startBtn').textContent = "▶ START";
-            addThought("⏹ STOPPED! All threads killed.");
-            showPopup("STOPPED! 🛑", "All checking <span class='highlight'>halted</span>.");
-        }
-        
-        function rawLog(msg) {
-            rawLogData.push(msg);
-            const el = document.getElementById('rawLogContent');
-            if(el) {
-                el.innerHTML += `<div class="raw-line">${msg}</div>`;
-                el.scrollTop = el.scrollHeight;
-            }
-        }
-        
-        function addHitLog(combo) {
-            hitLogData.push({service: document.getElementById('keyword')?.value || 'HOTMAIL', email: combo.split(':')[0], time: new Date().toLocaleTimeString(), proxy: 'N/A'});
-            document.getElementById('hitCount').textContent = hitLogData.length;
-            document.getElementById('hitCount2').textContent = hitLogData.length;
-            const el = document.getElementById('hitsTable');
-            const row = hitLogData[hitLogData.length-1];
-            const rowEl = document.createElement('div');
-            rowEl.style.display = 'grid';
-            rowEl.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
-            rowEl.style.padding = '3px';
-            rowEl.style.borderBottom = '1px solid rgba(0,255,65,0.15)';
-            rowEl.innerHTML = `<div style="color:var(--pcb-green)">${row.service}</div><div>${row.email}</div><div>${row.time}</div><div>${row.proxy}</div>`;
-            el.appendChild(rowEl);
-            el.scrollTop = el.scrollHeight;
-        }
-        
-        let hitSortCol = 'time', hitSortAsc = false;
-        function sortHits(col) {
-            if(hitSortCol === col) hitSortAsc = !hitSortAsc; else { hitSortCol = col; hitSortAsc = true; }
-            hitLogData.sort((a,b) => hitSortAsc ? (a[col] > b[col] ? 1 : -1) : (a[col] < b[col] ? 1 : -1));
-            const el = document.getElementById('hitsTable');
-            el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:5px;background:rgba(0,255,65,0.2);font-weight:bold"><div>SERVICE</div><div>EMAIL</div><div>TIME</div><div>PROXY</div></div>';
-            hitLogData.forEach(row => {
-                const rowEl = document.createElement('div');
-                rowEl.style.display = 'grid';
-                rowEl.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
-                rowEl.style.padding = '3px';
-                rowEl.style.borderBottom = '1px solid rgba(0,255,65,0.15)';
-                rowEl.innerHTML = `<div style="color:var(--pcb-green)">${row.service}</div><div>${row.email}</div><div>${row.time}</div><div>${row.proxy}</div>`;
-                el.appendChild(rowEl);
-            });
-            addThought(`Sorted by ${col} ${hitSortAsc?'↑':'↓'}`);
-        }
-        
-        async function pasteFromClipboard() {
-            try {
-                const t = await navigator.clipboard.readText();
-                const lines = t.split(/[\r\n]+/).filter(l => l.includes(':'));
-                const unique = [...new Set(lines)];
-                selectedFile = new File([unique.join('\n')], 'clipboard.txt');
-                document.getElementById('fileInfo').textContent = `${unique.length} from clipboard`;
-                addThought(`📋 ${unique.length} combos from clipboard`);
-            } catch(e) { showPopup("ERROR", "Clipboard read failed"); }
-        }
-        
-        function exportHits(type) {
-            const hits = hitLogData.join('\n');
-            const blob = new Blob([hits], {type: 'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `hits_${Date.now()}.${type === 'rar' ? 'txt' : type}`;
-            a.click();
-            URL.revokeObjectURL(url);
-            addThought("� export complete");
-        }
-    </script>
+                </div>
+                <div class="text-right">
+                    <div class="text-emerald-400 font-bold text-xs">EPIC HIT</div>
+                    <div class="text-[10px] text-gray-500">${result.total_items || 0} items</div>
+                </div>
+            </div>
+        `;
+    } else if (result.status === 'mshit') {
+        content = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-blue-400 font-bold text-sm">MS-HIT</div>
+                    <div class="text-[11px] text-gray-400 font-mono">${result.email}</div>
+                </div>
+                <i class="fa-brands fa-microsoft text-blue-400 text-2xl"></i>
+            </div>
+        `;
+    } else if (result.status === '2fa') {
+        content = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-yellow-400 font-bold text-sm">2FA PROTECTED</div>
+                    <div class="text-[11px] text-gray-400 font-mono">${result.email}</div>
+                </div>
+                <i class="fa-solid fa-shield-halved text-yellow-400 text-2xl"></i>
+            </div>
+        `;
+    }
+    
+    card.innerHTML = content;
+    card.onclick = () => showDetails(result);
+    feed.insertBefore(card, feed.firstChild);
+}
+
+// ===============================
+// Enhanced Country Detection UI (end)
+// ===============================
+
+// Initialize
+addLog('⚡ BoltFN Aurora Pro initialized', 'success');
+addLog('🔗 Real Microsoft + Epic Games checker', 'info');
+addLog('📊 Full DLC and item capture enabled', 'info');
+
+// Start System Info Widget
+startSystemInfo();
+addThoughtLog('System monitoring started');
+
+// Integrate AI thought logs with scan events
+socket.on('scan_started', (data) => {
+    addThoughtLog(`Scan started: ${data.total} combos`);
+});
+
+socket.on('hit_found', (result) => {
+    if (result.status === 'hit') {
+        addThoughtLog(`EPIC HIT: ${result.email} | ${result.country}`);
+    }
+});
+
+socket.on('stats_update', (stats) => {
+    if (stats.cpm > 0) {
+        const rate = stats.cpm > 100 ? 'HIGH' : (stats.cpm > 50 ? 'MED' : 'LOW');
+        addThoughtLog(`Rate: ${stats.cpm} CPM (${rate})`);
+    }
+});
+</script>
+
 </body>
 </html>
