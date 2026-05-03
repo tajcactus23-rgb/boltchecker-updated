@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoltFM v2.0 | OG Xbox Modding</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e14;
+            --bg-panel: #111820;
+            --neon-blue: #00f0ff;
+            --neon-cyan: #00ffd5;
+            --pcb-green: #00ff41;
+            --warning: #ff6b00;
+            --error: #ff0040;
+            --text: #e0e8f0;
+            --text-dim: #6a7a8a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .circuit-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent 98%, rgba(0,240,255,0.03) 98%),
+                        linear-gradient(0deg, transparent 98%, rgba(0,240,255,0.03) 98%);
+            background-size: 50px 50px;
+            animation: circuitMove 20s linear infinite;
+            z-index: 0;
+        }
+        
+        @keyframes circuitMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        .app-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: linear-gradient(180deg, rgba(17,24,32,0.95) 0%, rgba(17,24,32,0.8) 100%);
+            border-bottom: 1px solid rgba(0,240,255,0.3);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-cyan) 50%, var(--pcb-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(0,240,255,0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(0,240,255,0.8)); }
+        }
+        
+        .header-status {
+            display: flex;
+            gap: 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(0,240,255,0.1);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 4px;
+        }
+        
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--pcb-green);
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .login-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 20px;
+        }
+        
+        .login-box {
+            width: 450px;
+            background: rgba(17,24,32,0.9);
+            border: 1px solid rgba(0,240,255,0.3);
+            border-radius: 8px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--pcb-green), var(--neon-cyan));
+            animation: scanline 2s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100px); }
+        }
+        
+        .login-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--neon-blue);
+        }
+        
+        .input-group { margin-bottom: 20px; }
+        
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(0,240,255,0.3);
+            border-radius: 4px;
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0,240,255,0.2);
+        }
+        
+        .hwid-display {
+            background: #000;
+            padding: 15px;
+            border: 1px solid rgba(0,240,255,0.3);
+            border-radius: 4px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--pcb-green);
+            word-break: break-all;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-cyan) 100%);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-dark);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .btn-login:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0,240,255,0.5);
+        }
+        
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-start, .btn-stop {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, var(--pcb-green) 0%, var(--neon-cyan) 100%);
+            color: var(--bg-dark);
+        }
+        
+        .btn-start:hover {
+            box-shadow: 0 0 25px rgba(0,255,65,0.5);
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, var(--error) 0%, var(--warning) 100%);
+            color: white;
+        }
+        
+        .btn-stop:hover {
+            box-shadow: 0 0 25px rgba(255,0,64,0.5);
+        }
+        
+        .beta-badge {
+            position: absolute;
+            top: 15px; right: -30px;
+            background: var(--warning);
+            color: #000;
+            padding: 5px 40px;
+            font-size: 10px;
+            font-weight: 700;
+            transform: rotate(45deg);
+        }
+        
+        .dashboard { display: none; padding: 20px; }
+        .dashboard.active { display: block; }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .mode-btn {
+            padding: 12px 24px;
+            background: rgba(17,24,32,0.8);
+            border: 1px solid rgba(0,240,255,0.3);
+            border-radius: 4px;
+            color: var(--text);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn:hover {
+            background: rgba(0,240,255,0.1);
+            border-color: var(--neon-blue);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(0,255,65,0.2));
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0,240,255,0.3);
+        }
+        
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: rgba(17,24,32,0.8);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .panel-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,240,255,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .stat-value.hits { color: var(--pcb-green); }
+        .stat-value.bad { color: var(--error); }
+        .stat-value.err { color: var(--warning); }
+        
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--pcb-green));
+            transition: width 0.3s;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        
+        .thought-window {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 4px;
+            height: 180px;
+            overflow: hidden;
+        }
+        
+        .thought-header {
+            background: rgba(0,240,255,0.1);
+            padding: 10px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .thought-icon {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: var(--pcb-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            animation: think 1s infinite;
+        }
+        
+        @keyframes think {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .thought-content {
+            padding: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            height: calc(100% - 40px);
+            overflow-y: auto;
+        }
+        
+        .thought-line {
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        .thought-line .time {
+            color: var(--neon-blue);
+            margin-right: 8px;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .popup-overlay.active { display: flex; }
+        
+        .popup-box {
+            width: 400px;
+            background: var(--bg-panel);
+            border: 2px solid var(--neon-blue);
+            border-radius: 8px;
+            animation: popIn 0.3s ease-out;
+            overflow: hidden;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .popup-header {
+            background: linear-gradient(135deg, var(--neon-blue), var(--pcb-green));
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--bg-dark);
+            font-weight: 700;
+        }
+        
+        .popup-close {
+            background: none;
+            border: none;
+            color: var(--bg-dark);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .popup-body { padding: 20px; }
+        
+        .popup-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .popup-text .highlight {
+            color: var(--neon-blue);
+            font-weight: 700;
+        }
+        
+        .popup-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--neon-blue);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-dark);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .popup-btn:hover { background: var(--pcb-green); }
+        
+        .file-drop {
+            border: 2px dashed rgba(0,240,255,0.3);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-drop:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0,240,255,0.05);
+        }
+        
+        .file-icon { font-size: 40px; margin-bottom: 10px; }
+        .file-text { color: var(--text-dim); font-size: 14px; }
+        .file-info {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    
+    <div class="app-container">
+        <header>
+            <div class="logo">⚡ BOLTFM ⚡</div>
+            <div class="header-status">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>CONNECTED</span>
+                </div>
+                <div class="status-item"><span id="cpuDisplay">CPU: --%</span></div>
+                <div class="status-item"><span id="memDisplay">RAM: --</span></div>
+                <select class="font-select" onchange="document.body.style.fontFamily=this.value" style="margin-left:10px;display:none">
+                    <option value="'Rajdhani', sans-serif">Rajdhani</option>
+            </div>
+        </header>
+        
+        <div class="login-panel" id="loginPanel">
+            <div class="login-box">
+                <div class="beta-badge">BETA</div>
+                <div class="login-title">🔐 HWID AUTH</div>
+                
+                <div class="input-group">
+                    <label>Hardware ID</label>
+                    <div class="hwid-display" id="hwidDisplay">Generating HWID...</div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Beta Code</label>
+                    <input type="text" placeholder="Enter beta code" id="betaCode">
+                </div>
+                
+                <button class="btn-login" onclick="login()">INITIALIZE</button>
+            </div>
+        </div>
+        
+        <div class="dashboard" id="dashboard">
+            <div class="toolbar">
+                <button class="mode-btn active" onclick="setMode('hotmail')">📧 HOTMAIL</button>
+                <button class="mode-btn" onclick="setMode('attachments')">📎 ATTACHMENTS</button>
+                <button class="mode-btn" onclick="setMode('fortnite')">🎮 FORTNITE</button>
+            </div>
+            
+            <div class="main-panel">
+                <div class="panel" id="checkerPanel">
+                    <div class="panel-header">
+                        <span>CHECKER</span>
+                        <span id="modeDisplay">HOTMAIL MODE</span>
+                    </div>
+                    
+                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
+                        <div class="file-icon" style="font-size:20px">📁</div>
+                        <div class="file-text" style="font-size:11px">Drop file / paste clipboard</div>
+                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
+                        <button onclick="event.stopPropagation();pasteFromClipboard()" style="margin-top:5px;padding:5px 10px;background:rgba(0,240,255,0.2);border:1px solid var(--neon-blue);color:var(--neon-blue);border-radius:3px;cursor:pointer;font-size:10px">📋 PASTE CLIP</button>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="input-group">
+                            <label>Threads</label>
+                            <input type="number" value="15" id="threads" style="width: 100px;">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Category</label>
+                            <select id="keyword">
+                                <option value="">-- Select Service --</option>
+                                <optgroup label="Streaming">
+                                    <option value="netflix">Netflix</option>
+                                    <option value="spotify">Spotify</option>
+                                    <option value="disney">Disney+</option>
+                                    <option value="hulu">Hulu</option>
+                                    <option value="prime">Prime Video</option>
+                                    <option value="youtube">YouTube Premium</option>
+                                    <option value="hbomax">HBO Max</option>
+                                    <option value="paramount">Paramount+</option>
+                                </optgroup>
+                                <optgroup label="Gaming">
+                                    <option value="xbox">Xbox Live</option>
+                                    <option value="playstation">PlayStation</option>
+                                    <option value="steam">Steam</option>
+                                    <option value="epic">Epic Games</option>
+                                    <option value="nintendo">Nintendo</option>
+                                    <option value="ea">EA Play</option>
+                                    <option value="ubisoft">Ubisoft+</option>
+                                </optgroup>
+                                <optgroup label="Crypto/Finance">
+                                    <option value="binance">Binance</option>
+                                    <option value="coinbase">Coinbase</option>
+                                    <option value="kraken">Kraken</option>
+                                    <option value="paypal">PayPal</option>
+                                    <option value="revolut">Revolut</option>
+                                    <option value="wise">Wise</option>
+                                    <option value="cashapp">Cash App</option>
+                                </optgroup>
+                                <optgroup label="Social/AI">
+                                    <option value="facebook">Facebook</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="twitter">Twitter/X</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="chatgpt">ChatGPT</option>
+                                    <option value="claude">Claude AI</option>
+                                    <option value="midjourney">Midjourney</option>
+                                </optgroup>
+                                <optgroup label="Email/Tools">
+                                    <option value="gmail">Gmail</option>
+                                    <option value="outlook">Outlook</option>
+                                    <option value="proton">Proton Mail</option>
+                                    <option value="zoho">Zoho</option>
+                                    <option value="icloud">iCloud</option>
+                                </optgroup>
+                                <optgroup label="Shopping">
+                                    <option value="amazon">Amazon</option>
+                                    <option value="ebay">eBay</option>
+                                    <option value="etsy">Etsy</option>
+                                    <option value="shopify">Shopify</option>
+                                    <option value="aliexpress">AliExpress</option>
+                                </optgroup>
+                                <optgroup label="Aussie Services">
+                                    <option value="afterpay">Afterpay</option>
+                                    <option value="payid">PayID</option>
+                                    <option value="centrelink">Centrelink</option>
+                                    <option value="myob">MYOB</option>
+                                    <option value="xero">Xero</option>
+                                </optgroup>
+                                <optgroup label="Wellness/Cannabis">
+                                    <option value="cannatrek">Cannatrek</option>
+                                    <option value="solta">Solta</option>
+                                    <option value="cannamed">Cannamed</option>
+                                    <option value="weedmaps">Weedmaps</option>
+                                    <option value="leafly">Leafly</option>
+                                    <option value="honahlee">Honahlee</option>
+                                    <option value="mctears">MCTears</option>
+                                </optgroup>
+                                <optgroup label="Betting/Lotto">
+                                    <option value="pointsbet">Pointsbet</option>
+                                    <option value="bet365">Bet365</option>
+                                    <option value="palmerbet">Palmerbet</option>
+                                    <option value="neds">Neds</option>
+                                    <option value="tab">TAB</option>
+                                    <option value="ozlotto">Oz Lotto</option>
+                                    <option value="powerball">Powerball</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-row">
+                        <button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button>
+                        <button class="btn-stop" onclick="stopCheck()">⏹ STOP</button>
+                    </div>
+                    
+                    <div class="btn-row" style="margin-top:10px">
+                        <button class="btn-export" onclick="exportHits('txt')" style="flex:1;padding:8px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:3px;cursor:pointer;font-size:11px">↓ TXT</button>
+                        <button class="btn-export" onclick="exportHits('rar')" style="flex:1;padding:8px;background:rgba(255,107,0,0.2);border:1px solid var(--warning);color:var(--warning);border-radius:3px;cursor:pointer;font-size:11px">↓ RAR</button>
+                    </div>
+                </div>
+                
+                <div class="panel-sidebar">
+                    <div class="panel">
+                        <div class="panel-header"><span>STATS</span></div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-value hits" id="hitCount" style="font-size:32px">0</div>
+                                <div class="stat-label">Hits</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value bad" id="badCount" style="font-size:32px">0</div>
+                                <div class="stat-label">Bad</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value err" id="errCount" style="font-size:32px">0</div>
+                                <div class="stat-label">Errors</div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <div style="text-align: center; font-size: 14px; color: var(--text-dim);" id="progressText">0 / 0</div>
+                    </div>
+                    
+                    <div class="panel-header" style="margin-bottom:10px"><span>HITS TABLE</span><span id="hitCount2" style="color:var(--pcb-green)">0</span></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px;font-size:10px;color:var(--text-dim)">
+                        <div onclick="sortHits('service')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">SERVICE ↕</div>
+                        <div onclick="sortHits('email')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">EMAIL ↕</div>
+                        <div onclick="sortHits('time')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">TIME ↕</div>
+                        <div onclick="sortHits('proxy')" style="cursor:pointer;border:1px solid var(--pcb-green);padding:4px;text-align:center">PROXY ↕</div>
+                    </div>
+                    <div class="hits-table" id="hitsTable" style="max-height:500px;overflow-y:auto;font-size:11px">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:5px;background:rgba(0,255,65,0.2);font-weight:bold">
+                            <div>SERVICE</div><div>EMAIL</div><div>TIME</div><div>PROXY</div>
+                        </div>
+                    </div>
+                    
+                    <div class="thought-window" style="height:140px;margin-top:10px">
+                        <div class="thought-header">
+                            <div class="thought-icon">🤔</div>
+                            <span>BOT THINKING</span>
+                        </div>
+                        <div class="thought-content" id="thoughtContent" style="font-size:12px">
+                            <div class="thought-line"><span class="time">[21:23:55]</span>Ready...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="thought-window" style="height:140px;background:rgba(0,240,255,0.05)">
+                        <div class="thought-header" style="border-color:var(--neon-blue)">
+                            <div class="thought-icon">📋</div>
+                            <span>RAW LOG</span>
+                        </div>
+                        <div class="thought-content" id="rawLogContent" style="color:var(--neon-blue);font-size:10px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popup Overlay -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-box">
+            <div class="popup-header">
+                <span class="popup-title" id="popupTitle">G'DAY MATE!</span>
+                <button class="popup-close" onclick="closePopup()">×</button>
+            </div>
+            <div class="popup-body">
+                <div class="popup-text" id="popupText"></div>
+                <button class="popup-btn" onclick="closePopup()">CHEERS!</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function generateHWID() {
+            const chars = 'ABCDEF0123456789';
+            let hwid = '';
+            for(let i = 0; i < 32; i++) {
+                hwid += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return hwid;
+        }
+        
+        function updateSystemInfo() {
+            if(navigator.memory) {
+                const mem = navigator.memory.jsHeapSizeLimit / (1024*1024*1024);
+                document.getElementById('memDisplay').textContent = 'RAM: ' + mem.toFixed(1) + 'GB';
+            }
+            const cpu = Math.floor(Math.random() * 30 + 10);
+            document.getElementById('cpuDisplay').textContent = 'CPU: ' + cpu + '%';
+        }
+        setInterval(updateSystemInfo, 2000);
+        updateSystemInfo();
+        
+        document.getElementById('hwidDisplay').textContent = generateHWID();
+        
+        const aussieSayings = [
+            "G'day mate! You're cookin' now! 🔥",
+            "Oi! That's a ripper of an idea! 🎉",
+            "Ta-da! No worries at all! ✅",
+            "Bloody oath! This is gonna be legends! 🦘",
+            "She'll be right! Let's crack on! 💪",
+            "Too easy, bro! You're onto a winner! 🚀",
+            "Good on ya! The boys'll love this! 🍺",
+            "Crikey! That's absolutely heaps good! ⭐"
+        ];
+        
+        function showPopup(title, text) {
+            document.getElementById('popupTitle').textContent = title;
+            document.getElementById('popupText').innerHTML = text;
+            document.getElementById('popupOverlay').classList.add('active');
+        }
+        
+        function closePopup() {
+            document.getElementById('popupOverlay').classList.remove('active');
+        }
+        
+        function login() {
+            const beta = document.getElementById('betaCode').value;
+            
+            if(beta.length < 5) {
+                showPopup("OI! 🚨", "You need a <span class='highlight'>proper beta code</span> mate! Ask the dev team!");
+                return;
+            }
+            
+            const saying = aussieSayings[Math.floor(Math.random() * aussieSayings.length)];
+            showPopup("LOGIN SUCCESS!", saying);
+            
+            setTimeout(() => {
+                closePopup();
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('dashboard').classList.add('active');
+                addThought("🤔: Connected to MS auth servers... Ready to mod!");
+            }, 2000);
+        }
+        
+        function setMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const panelMain = document.getElementById('checkerPanel');
+            if(mode === 'hotmail') {
+                document.getElementById('modeDisplay').textContent = 'HOTMAIL MODE';
+                panelMain.innerHTML = `
+                    <div class="panel-header"><span>CHECKER</span><span id="modeDisplay">HOTMAIL MODE</span></div>
+                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
+                        <div class="file-icon" style="font-size:20px">📁</div>
+                        <div class="file-text" style="font-size:11px">Drop file / paste clipboard</div>
+                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
+                        <button onclick="event.stopPropagation();pasteFromClipboard()" style="margin-top:5px;padding:5px 10px;background:rgba(0,240,255,0.2);border:1px solid var(--neon-blue);color:var(--neon-blue);border-radius:3px;cursor:pointer;font-size:10px">📋 PASTE CLIP</button>
+                    </div>
+                    <div style="margin-top:20px">
+                        <div class="input-group"><label>Threads</label><input type="number" value="15" id="threads"></div>
+                        <div class="input-group"><label>Category</label><select id="keyword">
+                            <option value="">-- Select Service --</option>
+                            <optgroup label="Streaming"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="disney">Disney+</option><option value="hulu">Hulu</option><option value="prime">Prime Video</option></optgroup>
+                            <optgroup label="Gaming"><option value="xbox">Xbox Live</option><option value="playstation">PlayStation</option><option value="steam">Steam</option><option value="epic">Epic Games</option><option value="nintendo">Nintendo</option></optgroup>
+                            <optgroup label="Crypto"><option value="binance">Binance</option><option value="coinbase">Coinbase</option><option value="kraken">Kraken</option><option value="paypal">PayPal</option></optgroup>
+                            <optgroup label="Social"><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="twitter">Twitter/X</option><option value="tiktok">TikTok</option></optgroup>
+                            <optgroup label="Email"><option value="gmail">Gmail</option><option value="outlook">Outlook</option><option value="proton">Proton Mail</option></optgroup>
+                        </select></div>
+                    </div>
+                    <div class="btn-row"><button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button><button class="btn-stop" onclick="stopCheck()">⏹ STOP</button></div>
+                    <div class="btn-row" style="margin-top:10px"><button onclick="exportHits('txt')" style="flex:1;padding:8px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:3px;cursor:pointer;font-size:11px">↓ TXT</button><button onclick="exportHits('rar')" style="flex:1;padding:8px;background:rgba(255,107,0,0.2);border:1px solid var(--warning);color:var(--warning);border-radius:3px;cursor:pointer;font-size:11px">↓ RAR</button></div>
+                `;
+            } else if(mode === 'attachments') {
+                document.getElementById('modeDisplay').textContent = 'ATTACHMENTS MODE';
+                panelMain.innerHTML = `
+                    <div class="panel-header"><span>📎 MAILBOX DOWNLOADER</span><span>ATTACHMENTS</span></div>
+                    <div class="input-group"><label>Email Address</label><input type="email" id="mailboxEmail" placeholder="email@example.com"></div>
+                    <div class="input-group"><label>Password</label><input type="password" id="mailboxPass" placeholder="Password"></div>
+                    <div class="input-group"><label>IMAP Server</label><input type="text" id="imapServer" placeholder="imap.example.com" value="outlook.office365.com"></div>
+                    <div class="input-group"><label>IMAP Port</label><input type="number" id="imapPort" value="993"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px">
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="sslBox" checked> SSL/TLS</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" id="saveAttachments" checked> Save Attachments</label>
+                    </div>
+                    <div class="input-group" style="margin-top:15px"><label>Attachment Types</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;font-size:11px">
+                            <label><input type="checkbox" checked> PDF</label>
+                            <label><input type="checkbox" checked> Images</label>
+                            <label><input type="checkbox" checked> Docs</label>
+                            <label><input type="checkbox"> ZIP</label>
+                            <label><input type="checkbox"> Excel</label>
+                            <label><input type="checkbox"> All Files</label>
+                        </div>
+                    </div>
+                    <button class="btn-login" onclick="connectMailbox()" style="margin-top:20px">📥 CONNECT MAILBOX</button>
+                    <div class="thought-window" style="margin-top:15px;height:180px">
+                        <div class="thought-header"><div class="thought-icon">📬</div><span>MAIL MESSAGES</span></div>
+                        <div class="thought-content" id="mailContent" style="font-size:11px">
+                            <div style="padding:8px;border-bottom:1px solid rgba(0,240,255,0.2)"><span style="color:var(--pcb-green)">FROM:</span> sender@email.com <span style="color:var(--text-dim)">[12:30]</span><br>Subject line here</div>
+                        </div>
+                    </div>
+                    <div class="thought-window" style="margin-top:10px;height:120px;background:rgba(0,255,65,0.05)">
+                        <div class="thought-header" style="border-color:var(--pcb-green)"><div class="thought-icon">📎</div><span>ATTACHMENTS</span></div>
+                        <div class="thought-content" id="attachContent" style="font-size:11px"></div>
+                    </div>
+                `;
+            } else if(mode === 'fortnite') {
+                document.getElementById('modeDisplay').textContent = 'FORTNITE MODE';
+                panelMain.innerHTML = `
+                    <div class="panel-header"><span>🎮 FORTNITE CHECKER</span><span>FORTNITE</span></div>
+                    <div class="file-drop" onclick="selectFile()" style="min-height:80px;padding:10px">
+                        <div class="file-icon" style="font-size:20px">📁</div>
+                        <div class="file-text" style="font-size:11px">Drop Xbox combos</div>
+                        <div class="file-info" id="fileInfo" style="font-size:10px">No file</div>
+                    </div>
+                    <div style="margin-top:20px">
+                        <div class="input-group"><label>Threads</label><input type="number" value="10" id="threads"></div>
+                        <div class="input-group"><label>Mode</label><select id="fnMode"><option value="full">Full Capture</option><option value="brute">Brute Force</option></select></div>
+                    </div>
+                    <div class="btn-row"><button class="btn-start" onclick="toggleStartPause()" id="startBtn">▶ START</button><button class="btn-stop" onclick="stopCheck()">⏹ STOP</button></div>
+                    <button onclick="exportHits('txt')" style="margin-top:10px;width:100%;padding:12px;background:rgba(0,255,65,0.2);border:1px solid var(--pcb-green);color:var(--pcb-green);border-radius:4px;cursor:pointer">↓ EXPORT HITS</button>
+                `;
+            }
+            addThought(`🤔: ${mode.toUpperCase()} mode loaded.`);
+        }
+        
+        function connectMailbox() {
+            const email = document.getElementById('mailboxEmail').value;
+            if(!email) { showPopup("ERROR", "Enter email address"); return; }
+            showPopup("CONNECTING...", `Connecting to <span class="highlight">${email}</span>...`);
+            addThought(`📬 Connecting to ${email}...`);
+            setTimeout(() => {
+                const mailEl = document.getElementById('mailContent');
+                const sampleEmails = [
+                    {from: 'noreply@netflix.com', subject: 'Your Netflix payment is due', time: '10:23'},
+                    {from: 'support@steam.com', subject: 'New login detected', time: '09:45'},
+                    {from: 'orders@amazon.com', subject: 'Order confirmed #12345', time: '08:12'}
+                ];
+                sampleEmails.forEach(m => {
+                    mailEl.innerHTML += `<div style="padding:8px;border-bottom:1px solid rgba(0,240,255,0.2);cursor:pointer" onclick="showMail('${m.from}','${m.subject}')"><span style="color:var(--pcb-green)">FROM:</span> ${m.from} <span style="color:var(--text-dim)">[${m.time}]</span><br>📧 ${m.subject}</div>`;
+                });
+                showPopup("CONNECTED! 📬", `<span class="highlight">3 messages</span> found!`);
+                addThought("📬 Mailbox connected! 3 messages found.");
+            }, 1500);
+        }
+        
+        function showMail(from, subject) {
+            addThought(`Opening: ${subject}`);
+            const attachEl = document.getElementById('attachContent');
+            attachEl.innerHTML = `<div style="padding:8px"><span style="color:var(--pcb-green)">FROM:</span> ${from}<br><span style="color:var(--neon-cyan)">SUBJECT:</span> ${subject}</div>
+                <div style="margin-top:8px;padding:8px;background:rgba(0,255,65,0.1);border-radius:4px">
+                    <div style="color:var(--text-dim);font-size:10px">ATTACHMENTS (2)</div>
+                    <div style="margin-top:5px;cursor:pointer;color:var(--pcb-green)" onclick="downloadAttach('invoice.pdf')">📄 invoice.pdf</div>
+                    <div style="cursor:pointer;color:var(--pcb-green)" onclick="downloadAttach('receipt.jpg')">🖼️ receipt.jpg</div>
+                </div>`;
+        }
+        
+        function downloadAttach(filename) {
+            addThought(`⬇ Downloading ${filename}...`);
+            showPopup("DOWNLOADING", `<span class="highlight">${filename}</span> downloading...`);
+        }
+        
+        let selectedFile = null;
+        let isRunning = false;
+        let isPaused = false;
+        let hitLogData = [];
+        let rawLogData = [];
+        function selectFile() {
+            addThought("🤔: User selecting file...");
+            selectedFile = "combos.txt";
+            document.getElementById('fileInfo').textContent = "814 combos loaded";
+            addThought("🤔: File loaded! Ready to crack on!");
+            showPopup("FILE LOADED!", "No worries! <span class='highlight'>814 combos</span> ready to check. Let's get to it!");
+        }
+        
+        function startCheck() {
+            if(!selectedFile) {
+                showPopup("HEY! 🎯", "You haven't loaded any <span class='highlight'>combos</span> yet! Add a file first!");
+                return;
+            }
+            isRunning = true;
+            isPaused = false;
+            addThought("🤔: Starting hotmail checker with 15 threads...");
+            showPopup("LET'S GO! 🏃‍♂️", "No dramas! Starting check now. Should be <span class='highlight'>quick</span>!");
+            
+            let hits = 0, bad = 0;
+            const interval = setInterval(() => {
+                if(!isRunning) { clearInterval(interval); return; }
+                if(isPaused) return;
+                if(Math.random() > 0.4) hits++;
+                else bad++;
+                
+                document.getElementById('hitCount').textContent = hits;
+                document.getElementById('badCount').textContent = bad;
+                
+                rawLog(`[CHECK] Testing combo ${hits+bad} - ${Math.random() > 0.4 ? 'VALID' : 'INVALID'}`);
+                addHitLog(`${hits}:${bad}@test:pass`);
+                document.getElementById('progressText').textContent = (hits + bad) + ' / 814';
+                
+                if(hits + bad >= 814) {
+                    clearInterval(interval);
+                    showPopup("DONE! 🎉", "Absolute legends! Found <span class='highlight'>" + hits + " hits</span>! Fair dinkum!");
+                }
+            }, 100);
+        }
+        
+        function addThought(text) {
+            const content = document.getElementById('thoughtContent');
+            const time = new Date().toLocaleTimeString('en-AU', {hour12: false});
+            const line = `<div class="thought-line"><span class="time">[${time}]</span>${text}</div>`;
+            content.innerHTML += line;
+            content.scrollTop = content.scrollHeight;
+        }
+        
+        function toggleStartPause() {
+            if(!isRunning) { startCheck(); return; }
+            isPaused = !isPaused;
+            document.getElementById('startBtn').textContent = isPaused ? "▶ RESUME" : "⏸ PAUSE";
+            addThought(isPaused ? "⏸ Check paused" : "▶ Resuming check...");
+        }
+        
+        function stopCheck() {
+            isRunning = false;
+            isPaused = false;
+            document.getElementById('startBtn').textContent = "▶ START";
+            addThought("⏹ STOPPED! All threads killed.");
+            showPopup("STOPPED! 🛑", "All checking <span class='highlight'>halted</span>.");
+        }
+        
+        function rawLog(msg) {
+            rawLogData.push(msg);
+            const el = document.getElementById('rawLogContent');
+            if(el) {
+                el.innerHTML += `<div class="raw-line">${msg}</div>`;
+                el.scrollTop = el.scrollHeight;
+            }
+        }
+        
+        function addHitLog(combo) {
+            hitLogData.push({service: document.getElementById('keyword')?.value || 'HOTMAIL', email: combo.split(':')[0], time: new Date().toLocaleTimeString(), proxy: 'N/A'});
+            document.getElementById('hitCount').textContent = hitLogData.length;
+            document.getElementById('hitCount2').textContent = hitLogData.length;
+            const el = document.getElementById('hitsTable');
+            const row = hitLogData[hitLogData.length-1];
+            const rowEl = document.createElement('div');
+            rowEl.style.display = 'grid';
+            rowEl.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+            rowEl.style.padding = '3px';
+            rowEl.style.borderBottom = '1px solid rgba(0,255,65,0.15)';
+            rowEl.innerHTML = `<div style="color:var(--pcb-green)">${row.service}</div><div>${row.email}</div><div>${row.time}</div><div>${row.proxy}</div>`;
+            el.appendChild(rowEl);
+            el.scrollTop = el.scrollHeight;
+        }
+        
+        let hitSortCol = 'time', hitSortAsc = false;
+        function sortHits(col) {
+            if(hitSortCol === col) hitSortAsc = !hitSortAsc; else { hitSortCol = col; hitSortAsc = true; }
+            hitLogData.sort((a,b) => hitSortAsc ? (a[col] > b[col] ? 1 : -1) : (a[col] < b[col] ? 1 : -1));
+            const el = document.getElementById('hitsTable');
+            el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:5px;background:rgba(0,255,65,0.2);font-weight:bold"><div>SERVICE</div><div>EMAIL</div><div>TIME</div><div>PROXY</div></div>';
+            hitLogData.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.style.display = 'grid';
+                rowEl.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+                rowEl.style.padding = '3px';
+                rowEl.style.borderBottom = '1px solid rgba(0,255,65,0.15)';
+                rowEl.innerHTML = `<div style="color:var(--pcb-green)">${row.service}</div><div>${row.email}</div><div>${row.time}</div><div>${row.proxy}</div>`;
+                el.appendChild(rowEl);
+            });
+            addThought(`Sorted by ${col} ${hitSortAsc?'↑':'↓'}`);
+        }
+        
+        async function pasteFromClipboard() {
+            try {
+                const t = await navigator.clipboard.readText();
+                const lines = t.split(/[\r\n]+/).filter(l => l.includes(':'));
+                const unique = [...new Set(lines)];
+                selectedFile = new File([unique.join('\n')], 'clipboard.txt');
+                document.getElementById('fileInfo').textContent = `${unique.length} from clipboard`;
+                addThought(`📋 ${unique.length} combos from clipboard`);
+            } catch(e) { showPopup("ERROR", "Clipboard read failed"); }
+        }
+        
+        function exportHits(type) {
+            const hits = hitLogData.join('\n');
+            const blob = new Blob([hits], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hits_${Date.now()}.${type === 'rar' ? 'txt' : type}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addThought("� export complete");
+        }
+    </script>
+</body>
+</html>
