@@ -2,6 +2,8 @@
 chcp 65001 >nul
 title BOLTFM Build
 echo.
+set SCRIPTDIR=%~dp0
+cd /d "%SCRIPTDIR%"
 
 REM Create folders
 if not exist "gradle" mkdir "gradle"
@@ -14,12 +16,12 @@ if not exist "app\src\main\assets" mkdir "app\src\main\assets"
 REM Get Gradle wrapper files
 if not exist "gradle\wrapper\gradle-wrapper.jar" (
     echo Downloading Gradle Wrapper...
-    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.jar' -OutFile 'gradle\wrapper\gradle-wrapper.jar'"
+    powershell -Command "cd '%SCRIPTDIR%'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.jar' -OutFile 'gradle\wrapper\gradle-wrapper.jar'"
 )
 
 if not exist "gradle\wrapper\gradle-wrapper.properties" (
     echo Downloading Gradle properties...
-    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.properties' -OutFile 'gradle\wrapper\gradle-wrapper.properties'"
+    powershell -Command "cd '%SCRIPTDIR%'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.properties' -OutFile 'gradle\wrapper\gradle-wrapper.properties'"
 )
 
 REM Build
