@@ -1,26 +1,31 @@
-$ErrorActionPreference = "Stop"
-$BaseDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ErrorActionPreference = "Continue"
+$BaseDir = $PSScriptRoot
+if (-not $BaseDir) { $BaseDir = (Get-Item .).FullName }
 Set-Location $BaseDir
+Write-Host "Working in: $BaseDir"
 
-Write-Host "Base: $BaseDir"
-New-Item -ItemType Directory -Force -Path "$BaseDir\gradle\wrapper" | Out-Null
-New-Item -ItemType Directory -Force -Path "$BaseDir\app\src\main\assets" | Out-Null
-New-Item -ItemType Directory -Force -Path "$BaseDir\app\build\outputs\apk\debug" | Out-Null
-Write-Host "Folders done"
-
-$JarPath = "$BaseDir\gradle\wrapper\gradle-wrapper.jar"
-$PropPath = "$BaseDir\gradle\wrapper\gradle-wrapper.properties"
-
-if (-not (Test-Path $JarPath)) {
-    Write-Host "Downloading jar..."
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.jar" -OutFile $JarPath
+$folders = @("gradle\wrapper","app\src\main\assets","app\build\outputs\apk\debug")
+foreach($f in $folders) {
+    if (!(Test-Path $f)) { 
+        Write-Host "Creating $f"
+        New-Item -ItemType Directory -Path $f -Force | Out-Null 
+    }
 }
-if (-not (Test-Path $PropPath)) {
-    Write-Host "Downloading properties..."
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.properties" -OutFile $PropPath
+
+$JarUri = "https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.jar"
+$JarDst = "gradle\wrapper\gradle-wrapper.jar"
+Write-Host "Getting jar..."
+try {
+    Invoke-WebRequest -Uri $JarUri -OutFile $JarDst -UseBasicParsing
+    Write-Host "Got jar: $(Get-Item $JarDst).Length bytes"
+} catch {
+    Write-Host "ERROR: $_"
 }
+
+$PropUri = "https://raw.githubusercontent.com/tajcactus23-rgb/boltchecker-updated/main/gradle/wrapper/gradle-wrapper.properties"
+$PropDst = "gradle\wrapper\gradle-wrapper.properties"
+Invoke-WebRequest -Uri $PropUri -OutFile $PropDst -UseBasicParsing
 
 Write-Host "Building..."
-& java -classpath $JarPath org.gradle.wrapper.GradleWrapperMain assembleDebug
-Write-Host "Done"
+& java -classpath $JarDst org.gradle.wrapper.GradleWrapperMain assembleDebug
 pause
